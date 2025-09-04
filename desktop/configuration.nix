@@ -8,7 +8,6 @@
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
       ./timers.nix
-      ./secrets.nix
       #./overlays.nix
     ];
 
@@ -25,6 +24,7 @@
     "dotnet-core-combined"
     "dotnet-sdk-6.0.428"
     "dotnet-sdk-wrapped-6.0.428"
+    "qtwebengine-5.15.19"
   ];
 
   # Bootloader.
@@ -80,9 +80,9 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
     hostId = "7fd0a66b";
   #  dhcpcd.extraConfig = "nohook resolv.conf";
   #  networkmanager.dns = "none";
-    #resolvconf.extraOptions = [
-    #	"options no-aaaa"
-    #];
+    resolvconf.extraOptions = [
+      "options no-aaaa"
+    ];
   #  interfaces = {
   #    eth2.ipv4.addresses = [{
   #      address = "10.69.1.90";
@@ -207,6 +207,8 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
 
   programs.noisetorch.enable = true;
   programs.fish.enable = true;
+  programs.nh.enable = true;
+  programs.nh.flake = "/home/nathan/nix";
 
   nix.settings.trusted-users = [ "root" "nathan" ];
   users.users.nathan = {
@@ -220,6 +222,8 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
       globalprotect-openconnect
       superTuxKart
       mprocs
+
+
 
       qrencode
 
@@ -246,7 +250,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
       gpu-screen-recorder-gtk
       hugin
 
-      ryujinx
+      ryubing
       heroic
       wayvnc
       vesktop
@@ -561,7 +565,6 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
 
   # Nginx
   services.nginx.enable = true;
-  services.nginx.recommendedZstdSettings = true;
   services.nginx.virtualHosts = rec {
     "jellyfin-lab.naed3r.xyz" = {
       extraConfig = "zstd on;";
