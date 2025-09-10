@@ -140,6 +140,17 @@ in
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
 
+  programs.virt-manager.enable = true;
+  
+  users.groups.libvirtd.members = ["nathan"];
+  
+  virtualisation.libvirtd.enable = true;
+  
+  virtualisation.spiceUSBRedirection.enable = true;
+
+  programs.wireshark.enable = true;
+  programs.wireshark.usbmon.enable = true;
+
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.nathan = {
     isNormalUser = true;
@@ -150,7 +161,10 @@ in
       nasm
       ghidra-bin
 
+      tcpdump
+
       arduino-ide
+      aria2
 
       wireshark
 
@@ -199,11 +213,11 @@ in
       wineWowPackages.stable
       libcap 
       go 
-      gcc
       python311
       python311Packages.pip
       python311Packages.numpy
       python311Packages.pandas
+      gnumake
 
       rars
       fastfetch
@@ -384,15 +398,15 @@ in
     ];
   };
 
-  # programs.gnupg.agent = {
-  #   enable = true;
-  #   enableSSHSupport = true;
-  # };
+  programs.gnupg.agent = {
+    enable = true;
+    enableSSHSupport = true;
+  };
 
   # List services that you want to enable:
 
   # Enable the OpenSSH daemon.
-  # services.openssh.enable = true;
+  services.openssh.enable = true;
 
   networking.hosts = {
     "10.69.1.210" = ["kube.clusterfuck.local"];
