@@ -201,7 +201,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   };
 
   services.globalprotect = {
-    enable = true;
+    enable = false;
     csdWrapper = "${pkgs.openconnect}/libexec/openconnect/hipreport.sh";
   };
 
@@ -215,15 +215,15 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
     shell = pkgs.fish;
     isNormalUser = true;
     description = "Nathan Moore";
-    extraGroups = [ "networkmanager" "wheel" "libvirt" "docker" "adbusers" "dialout" ];
+    extraGroups = [ "networkmanager" "wheel" "libvirt" "docker" "adbusers" "dialout" "wireshark" ];
     packages = with pkgs; [
       arduino-ide
 
-      globalprotect-openconnect
+      #globalprotect-openconnect
       superTuxKart
       mprocs
 
-
+      kitty
 
       qrencode
 
@@ -270,7 +270,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
       nodejs_24
 
       fastfetch
-      jellyfin-media-player
+      #jellyfin-media-player
       prismlauncher
       signal-desktop-bin
       dig
@@ -289,7 +289,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
 
       #jetbrains.idea-community-bin
 
-      firefox
+      (pkgs.wrapFirefox (pkgs.firefox-unwrapped.override { pipewireSupport = true;}) {})
       libnotify # Possibly fixing notification issues with firefox
 
       maim
@@ -339,14 +339,11 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
       lxqt.lxqt-themes
       lxqt.pavucontrol-qt
       
-      sonusmix
-
       # Python
       python311
       python311Packages.pip
       python311Packages.requests
-      python311Packages.tkinter
-      python311Packages.httpx
+      #python311Packages.httpx
       python311Packages.beautifulsoup4
 
       thunderbird
@@ -358,12 +355,12 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   # Waydroid
   virtualisation.waydroid.enable = true;
 
-  services.ceph.enable = true;
-  services.ceph.client.enable = true;
-  services.ceph.global.fsid = "4b9a71e8-7d89-4dfc-ad16-af5006db2373";
-  services.ceph.global.clusterNetwork = "10.69.1.0/24";
-  services.ceph.global.monHost = "10.69.1.27, 10.69.1.26, 10.69.1.24";
-  services.ceph.global.monInitialMembers = "10.69.1.27, 10.69.1.24, 10.69.1.26";
+  #services.ceph.enable = false;
+  #services.ceph.client.enable = false;
+  #services.ceph.global.fsid = "4b9a71e8-7d89-4dfc-ad16-af5006db2373";
+  #services.ceph.global.clusterNetwork = "10.69.1.0/24";
+  #services.ceph.global.monHost = "10.69.1.27, 10.69.1.26, 10.69.1.24";
+  #services.ceph.global.monInitialMembers = "10.69.1.27, 10.69.1.24, 10.69.1.26";
 
   services.sunshine = {
     enable = true;
@@ -372,7 +369,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
 
   # File Manager Stuff
   services.samba = {
-    enable = true;
+    enable = false;
     package = pkgs.sambaFull;
   };
 
@@ -407,7 +404,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   networking.usePredictableInterfaceNames = false;
 
   # hyprland
-  programs.hyprland.enable = true;
+  programs.hyprland.enable = false;
 
   # direnv
   programs.direnv.enable = true;
@@ -434,7 +431,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
     lxqt.lxqt-policykit
     gdu
 
-    ceph-client
+    #ceph-client
     btrfs-progs
 
     # sway config
@@ -443,11 +440,11 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
     dunst
     waybar
     wofi
-    rofi-wayland
+    rofi
     feh
     alacritty
-    xdg-desktop-portal-wlr
     swaybg
+    xdg-desktop-portal-wlr
 
     # Wayland Screenshot
     grim
@@ -464,7 +461,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
     kdePackages.phonon
     kdePackages.kdeconnect-kde
     kdePackages.plasma-browser-integration
-    kdePackages.xdg-desktop-portal-kde
+    #kdePackages.xdg-desktop-portal-kde
     kdePackages.plasma-workspace
 
 
@@ -535,7 +532,6 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   programs.sway = {
     enable = true;
     wrapperFeatures.gtk = true;
-
   };
 
   services.syncthing = {
@@ -567,7 +563,6 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   services.nginx.enable = true;
   services.nginx.virtualHosts = rec {
     "jellyfin-lab.naed3r.xyz" = {
-      extraConfig = "zstd on;";
       addSSL = true;
       serverAliases = [
         "jellyfin"
@@ -656,8 +651,9 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   services.flatpak.enable = true;
 
   xdg.portal.enable = true;
-  xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-wlr ];
-  xdg.portal.config.common.default = "kde";
+  xdg.portal.wlr.enable = true;
+  xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+  #xdg.portal.config.common.default = "kde";
 
   # Environment Variables
   environment.variables = {
@@ -722,11 +718,11 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
     options = [ "defaults" "rw" "exec" "_netdev" "nofail"];
   };
 
-  fileSystems."/home/nathan/mnt/NixStorage" = {
-    device = "nixstor2@4b9a71e8-7d89-4dfc-ad16-af5006db2373.NixStorage=/";
-    fsType = "ceph";
-    options = [ "mon_addr=10.69.1.23:6789/10.69.1.24:6789" "_netdev" "nofail"];
-  };
+  #fileSystems."/home/nathan/mnt/NixStorage" = {
+  #  device = "nixstor2@4b9a71e8-7d89-4dfc-ad16-af5006db2373.NixStorage=/";
+  #  fsType = "ceph";
+  #  options = [ "mon_addr=10.69.1.23:6789/10.69.1.24:6789" "_netdev" "nofail"];
+  #};
 
   fileSystems."/home/nathan/mnt/slimjim" = {
     device = "10.69.1.26:/Temp-Pool/";
