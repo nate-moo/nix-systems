@@ -8,9 +8,15 @@
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
     sops-nix.url = "github:Mic92/sops-nix";
     sops-nix.inputs.nixpkgs.follows = "nixpkgs";
+    lanzaboote = {
+      url = "github:nix-community/lanzaboote/v0.4.2";
+
+      # Optional but recommended to limit the size of your system closure.
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, nixpkgs-stable, quickshell, nixos-hardware, sops-nix, ... }@inputs: {
+  outputs = { self, nixpkgs, nixpkgs-stable, lanzaboote, quickshell, nixos-hardware, sops-nix, ... }@inputs: {
     # Desktop
     nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
@@ -24,11 +30,32 @@
       ];
     };
 
-  nixosConfigurations.nixlappy = nixpkgs-stable.lib.nixosSystem {
+  nixosConfigurations.nixlappy = nixpkgs.lib.nixosSystem {
     # NixLappy
     system = "x86_64-linux";
     specialArgs = { inherit inputs; };
     modules = [
+
+      lanzaboote.nixosModules.lanzaboote
+
+      ({ pkgs, lib, ... }: {
+
+          environment.systemPackages = [
+            # For debugging and troubleshooting Secure Boot.
+            pkgs.sbctl
+          ];
+
+          # Lanzaboote currently replaces the systemd-boot module.
+          # This setting is usually set to true in configuration.nix
+          # generated at installation time. So we force it to false
+          # for now.
+          boot.loader.systemd-boot.enable = lib.mkForce false;
+          boot.lanzaboote = {
+            enable = true;
+            pkiBundle = "/var/lib/sbctl";
+          };
+      })
+
       ./lappy/configuration.nix
 
       #./common/common.nix
