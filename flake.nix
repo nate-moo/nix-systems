@@ -41,6 +41,13 @@
       
 
         #nixos-hardware.nixosModules.common-cpu-intel-tiger-lake
+	({ config, lib, ... }: {
+          config = {
+            boot.kernelParams = lib.mkIf (config.hardware.intelgpu.driver == "i915") [ "i915.enable_guc=3" ];
+            hardware.intelgpu.vaapiDriver = "intel-media-driver";
+         };
+	})
+
         nixos-hardware.nixosModules.common-cpu-intel
         nixos-hardware.nixosModules.common-hidpi
         nixos-hardware.nixosModules.common-pc-laptop-ssd
