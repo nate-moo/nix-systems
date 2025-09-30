@@ -30,6 +30,23 @@
       ];
     };
 
+  nixosConfigurations.spookter = nixpkgs-stable.lib.nixosSystem {
+    system = "x86_64-linux";
+    specialArgs = { inherit inputs; };
+    modules = [
+      ./spookter/configuration.nix
+      #./common/common.nix
+      sops-nix.nixosModules.sops
+      
+
+      nixos-hardware.nixosModules.common-cpu-intel-tiger-lake
+      nixos-hardware.nixosModules.common-cpu-intel
+      nixos-hardware.nixosModules.common-hidpi
+      nixos-hardware.nixosModules.common-pc-laptop-ssd
+      nixos-hardware.nixosModules.common-pc-laptop
+    ];
+  };
+
   nixosConfigurations.nixlappy = nixpkgs.lib.nixosSystem {
     # NixLappy
     system = "x86_64-linux";
