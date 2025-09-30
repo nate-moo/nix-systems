@@ -30,40 +30,41 @@
       ];
     };
 
-  nixosConfigurations.spookter = nixpkgs-stable.lib.nixosSystem {
-    system = "x86_64-linux";
-    specialArgs = { inherit inputs; };
-    modules = [
-      ./spookter/configuration.nix
-      #./common/common.nix
-      sops-nix.nixosModules.sops
+    # Spookter
+    nixosConfigurations.spookter = nixpkgs-stable.lib.nixosSystem {
+      system = "x86_64-linux";
+      specialArgs = { inherit inputs; };
+      modules = [
+        ./spookter/configuration.nix
+        #./common/common.nix
+        sops-nix.nixosModules.sops
       
 
-      nixos-hardware.nixosModules.common-cpu-intel-tiger-lake
-      nixos-hardware.nixosModules.common-cpu-intel
-      nixos-hardware.nixosModules.common-hidpi
-      nixos-hardware.nixosModules.common-pc-laptop-ssd
-      nixos-hardware.nixosModules.common-pc-laptop
-    ];
-  };
+        #nixos-hardware.nixosModules.common-cpu-intel-tiger-lake
+        nixos-hardware.nixosModules.common-cpu-intel
+        nixos-hardware.nixosModules.common-hidpi
+        nixos-hardware.nixosModules.common-pc-laptop-ssd
+        nixos-hardware.nixosModules.common-pc-laptop
+      ];
+    };
 
-  nixosConfigurations.nixlappy = nixpkgs.lib.nixosSystem {
-    # NixLappy
-    system = "x86_64-linux";
-    specialArgs = { inherit inputs; };
-    modules = [
+    nixosConfigurations.nixlappy = nixpkgs.lib.nixosSystem {
+      # NixLappy
+      system = "x86_64-linux";
+      specialArgs = { inherit inputs; };
+      modules = [
 
-      lanzaboote.nixosModules.lanzaboote
+        lanzaboote.nixosModules.lanzaboote
+  
+        ({ pkgs, lib, ... }: {
 
-      ({ pkgs, lib, ... }: {
+            environment.systemPackages = [
+              # For debugging and troubleshooting Secure Boot.
+              pkgs.sbctl
+            ];
 
-          environment.systemPackages = [
-            # For debugging and troubleshooting Secure Boot.
-            pkgs.sbctl
-          ];
-
-          # Lanzaboote currently replaces the systemd-boot module.
-          # This setting is usually set to true in configuration.nix
+            # Lanzaboote currently replaces the systemd-boot module.
+            # This setting is usually set to true in configuration.nix
           # generated at installation time. So we force it to false
           # for now.
           boot.loader.systemd-boot.enable = lib.mkForce false;
@@ -71,19 +72,19 @@
             enable = true;
             pkiBundle = "/var/lib/sbctl";
           };
-      })
+        })
 
-      ./lappy/configuration.nix
+        ./lappy/configuration.nix
 
-      #./common/common.nix
+        #./common/common.nix
 
-      nixos-hardware.nixosModules.common-cpu-intel
-      nixos-hardware.nixosModules.common-hidpi
-      nixos-hardware.nixosModules.common-pc-laptop-ssd
-      nixos-hardware.nixosModules.common-pc-laptop
+        nixos-hardware.nixosModules.common-cpu-intel
+        nixos-hardware.nixosModules.common-hidpi
+        nixos-hardware.nixosModules.common-pc-laptop-ssd
+        nixos-hardware.nixosModules.common-pc-laptop
 
-      sops-nix.nixosModules.sops
-      ];
+        sops-nix.nixosModules.sops
+        ];
+      };
     };
-  };
 }
