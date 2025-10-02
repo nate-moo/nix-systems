@@ -116,6 +116,7 @@
       kdePackages.kate
     #  thunderbird
       fastfetch
+      virt-viewer
       btop
       nomacs
       kitty
