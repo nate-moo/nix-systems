@@ -15,18 +15,21 @@
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
   # BAD
-  nixpkgs.config.permittedInsecurePackages = [
-    "olm-3.2.16"
-    "dotnet-sdk-wrapped-7.0.410"
-    "dotnet-sdk-7.0.410"
-    "dotnet-runtime-wrapped-7.0.20"
-    "dotnet-runtime-7.0.20"
-    "dotnet-core-combined"
-    "dotnet-sdk-6.0.428"
-    "dotnet-sdk-wrapped-6.0.428"
-    "qtwebengine-5.15.19"
-  ];
-
+  nixpkgs.config = {
+    permittedInsecurePackages = [
+      "olm-3.2.16"
+      "dotnet-sdk-wrapped-7.0.410"
+      "dotnet-sdk-7.0.410"
+      "dotnet-runtime-wrapped-7.0.20"
+      "dotnet-runtime-7.0.20"
+      "dotnet-core-combined"
+      "dotnet-sdk-6.0.428"
+      "dotnet-sdk-wrapped-6.0.428"
+      "qtwebengine-5.15.19"
+    ];
+    allowBroken = true;
+    android_sdk.accept_license = true;
+  };
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.systemd-boot.consoleMode = "max";
@@ -65,7 +68,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
 
   boot.initrd.kernelModules = [ "amdgpu" ];
 
-  boot.supportedFilesystems = [ "zfs" ];
+  #boot.supportedFilesystems = [ "zfs" ];
 
   # -- Auto Loading -- #
   #boot.kernelModules = [  ];
@@ -81,7 +84,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   #  dhcpcd.extraConfig = "nohook resolv.conf";
   #  networkmanager.dns = "none";
     resolvconf.extraOptions = [
-      "options no-aaaa"
+      #"options no-aaaa"
     ];
   #  interfaces = {
   #    eth2.ipv4.addresses = [{
@@ -163,7 +166,6 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
 
   hardware.graphics.extraPackages = with pkgs; [
     rocmPackages.clr.icd
-    amdvlk
   ];
 
   systemd.tmpfiles.rules = [
@@ -209,6 +211,9 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   programs.fish.enable = true;
   programs.nh.enable = true;
   programs.nh.flake = "/home/nathan/nix";
+  programs.chromium.enable = true;
+
+  #android_sdk.accept_license = true;
 
   nix.settings.trusted-users = [ "root" "nathan" ];
   users.users.nathan = {
@@ -220,7 +225,6 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
       arduino-ide
 
       #globalprotect-openconnect
-      superTuxKart
       mprocs
 
       kitty
@@ -267,6 +271,8 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
       jetbrains.goland
       go
 
+      android-studio
+
       nodejs_24
 
       fastfetch
@@ -285,11 +291,12 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
       kubernetes-helm
 
       amdgpu_top
-      ollama
+      #ollama
 
       #jetbrains.idea-community-bin
 
       (pkgs.wrapFirefox (pkgs.firefox-unwrapped.override { pipewireSupport = true;}) {})
+      ungoogled-chromium
       libnotify # Possibly fixing notification issues with firefox
 
       maim
@@ -381,7 +388,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
 
   # ollama
   services.ollama = {
-    enable = true;
+    enable = false;
     acceleration = "rocm";
     environmentVariables = {
       HSA_OVERRIDE_GFX_VERSION = "11.0.0";
