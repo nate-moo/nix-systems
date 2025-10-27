@@ -73,29 +73,82 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   # -- Auto Loading -- #
   #boot.kernelModules = [  ];
 
+  security.krb5 = {
+    enable = true;
+    settings = {
+
+      libdefaults = {
+        default_realm = "DS.AS213801.NET";
+      };
+
+      domain_realm = {
+        ".ds.as213801.net" = "DS.AS213801.NET";
+        "ds.as213801.net" = "DS.AS213801.NET";
+        "freeipa.ds.as213801.net" = "DS.AS213801.NET";
+      };
+
+      realms = {
+        "DS.AS213801.NET" = {
+          admin_server = "freeipa.ds.as213801.net:749";
+          kpasswd_server = "freeipa.ds.as213801.net:464";
+          master_kdc = "freeipa.ds.as213801.net:88";
+          kdc = [
+            "freeipa.ds.as213801.net:88"
+          ];
+        };
+      };
+    };
+  };
+
   networking.hostName = "nixos"; # Define your hostname.
-  networking.networkmanager.enable = true;
+  networking.networkmanager.enable = false;
   #boot.initrd.systemd.network.wait-online.enable = true;
   #systemd.network.wait-online.enable = true;
 
   networking = {
     nameservers = [ "10.69.1.1" ];#"2602:f766:b:4000::1" ];
+    defaultGateway = "10.69.1.1";
     hostId = "7fd0a66b";
   #  dhcpcd.extraConfig = "nohook resolv.conf";
   #  networkmanager.dns = "none";
     resolvconf.extraOptions = [
       #"options no-aaaa"
     ];
-  #  interfaces = {
-  #    eth2.ipv4.addresses = [{
-  #      address = "10.69.1.90";
-#	 prefixLength = 24;
+    vlans = {
+      vlan150 = { id=150; interface="eth2"; };
+      vlan100 = { id=100; interface="eth2"; };
+      vlan10  = { id=10;  interface="eth2"; };
+    };
+    interfaces = {
+      vlan150.ipv6.addresses = [{
+        address = "2602:f766:b:3::90";
+        prefixLength = 64;
+      }];
+      vlan100.ipv4.addresses = [{
+        address = "192.168.0.220";
+        prefixLength = 24;
+      }];
+      vlan10.ipv4 = {
+        addresses = [{
+          address = "10.69.1.90";
+          prefixLength = 24;
+        }];
+        routes = [{
+          address = "0.0.0.0";
+          prefixLength = 0;
+          via = "10.69.1.1";
+        }];
+      };
+      eth2.useDHCP = false;      
+#      eth2.ipv4.addresses = [{
+#        address = "10.69.1.90";
+#	    prefixLength = 24;
 #      }];
 #      eth2.ipv6.addresses = [{
 #        address = "2602:f766:b:4000::90";
 #	 prefixLength = 50;
 #      }];
-#    };
+    };
   };
 
   # Set your time zone.
@@ -208,6 +261,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   };
 
   programs.noisetorch.enable = true;
+  programs.zsh.enable = true;
   programs.fish.enable = true;
   programs.nh.enable = true;
   programs.nh.flake = "/home/nathan/nix";
@@ -217,11 +271,17 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
 
   nix.settings.trusted-users = [ "root" "nathan" ];
   users.users.nathan = {
-    shell = pkgs.fish;
+    shell = pkgs.zsh;
     isNormalUser = true;
     description = "Nathan Moore";
     extraGroups = [ "networkmanager" "wheel" "libvirt" "docker" "adbusers" "dialout" "wireshark" ];
     packages = with pkgs; [
+      zoxide
+      eza
+      bat
+      zsh
+      oh-my-posh
+
       arduino-ide
 
       #globalprotect-openconnect
@@ -230,8 +290,6 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
       kitty
 
       qrencode
-
-      supercell-wx
 
       fish
       fishPlugins.tide
@@ -403,7 +461,6 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   programs.adb.enable = true;
   programs.gpu-screen-recorder.enable = true;
   services.udev.packages = [
-    pkgs.android-udev-rules
     pkgs.via
   ];
 
@@ -530,7 +587,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
     via
 
   ] ++ [
-    inputs.quickshell.packages.x86_64-linux.default
+    #inputs.quickshell.packages.x86_64-linux.default
   ];
 
   # SwayFX
@@ -636,6 +693,8 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   138.67.190.221 isengard.mines.edu
   138.67.208.30  mio-ondemand.mines.edu
   138.67.212.56  ada.mines.edu
+
+  10.69.1.10     freeipa.ds.as213801.net
 
   10.69.1.210    kube.clusterfuck.local
   10.69.1.212    kube.clusterfuck.local
