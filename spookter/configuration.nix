@@ -61,6 +61,27 @@
   # Enable CUPS to print documents.
   services.printing.enable = true;
 
+  security.krb5 = {
+    enable = true;
+    
+    settings = {
+      libdefaults = {
+        default_realm = "DS.AS213801.NET";
+      };
+
+      realms = {
+        "DS.AS213801.NET" = {
+          kdc = [
+  	    "freeipa.ds.as213801.net:88"
+	  ];
+	  master_kdc = "freeipa.ds.as213801.net:88";
+	  kpasswd_server = "freeipa.ds.as213801.net:464";
+	  default_domain = "ds.as213801.net";
+	  admin_server = "freeipa.ds.as213801.net:749";
+        };
+      };
+    };
+  };
   # Enable sound with pipewire.
   hardware.pulseaudio.enable = false;
   security.rtkit.enable = true;
@@ -121,7 +142,13 @@
       nomacs
       kitty
       wineWowPackages.stable
+      winbox4
       usbtop
+
+      jetbrains.clion
+      libgcc
+      clang
+      gdb
 
       git
     ];
@@ -182,6 +209,10 @@
 
   # Enable the OpenSSH daemon.
   # services.openssh.enable = true;
+
+  networking.extraHosts = ''
+    10.69.1.10 freeipa.ds.as213801.net freeipa
+  '';
 
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
