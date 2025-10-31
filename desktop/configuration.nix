@@ -100,6 +100,24 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
     };
   };
 
+  security.ipa = {
+    enable = false;
+    realm = "DS.AS213801.NET";
+    domain = "ds.as213801.net";
+    server = "freeipa.ds.as213801.net";
+    ipaHostname = "nixos.ds.as213801.net";
+    certificate = pkgs.fetchurl {
+      url = "http://freeipa.ds.as213801.net/ipa/config/ca.crt";
+      sha256 = "16bk2fdxzigm508i29rpmgbp2kpd75dzr58m7a2kv7jz0gjs396j";
+    };
+    basedn = "dc=ds,dc=as213801,dc=net";
+    ifpAllowedUids = [
+      "root"
+      "nathan"
+      "nmoore"
+    ];
+    dyndns.interface = "vlan100";
+  };
   networking.hostName = "nixos"; # Define your hostname.
   networking.networkmanager.enable = false;
   #boot.initrd.systemd.network.wait-online.enable = true;
