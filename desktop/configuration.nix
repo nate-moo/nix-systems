@@ -406,7 +406,6 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
       btop
       hugo
       legcord
-      glxinfo
       youtube-music
       waypipe
       tiny
@@ -559,8 +558,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
     hunspell
     hunspellDicts.en_US
 
-    onlyoffice-bin_latest
-
+    onlyoffice-desktopeditors
 
     # Development resources
     xorg.xhost
@@ -833,7 +831,6 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
     noto-fonts
     noto-fonts-cjk-sans
     noto-fonts-color-emoji
-    noto-fonts-emoji
     liberation_ttf
     fira-code
     fira-code-symbols
