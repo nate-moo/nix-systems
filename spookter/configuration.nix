@@ -133,6 +133,11 @@
     description = "Nate";
     extraGroups = [ "networkmanager" "wheel" "docker" "adbusers" "wireshark" "camera" ];
     packages = with pkgs; [
+      go
+
+      nodejs_24
+      jq
+
       vesktop
       kdePackages.kate
     #  thunderbird
@@ -145,14 +150,23 @@
       winbox4
       usbtop
 
+      blender
+
       jetbrains.clion
+      jetbrains.goland
       libgcc
       clang
       gdb
 
       libreoffice-qt6-fresh
 
+      dig
+
       git
+
+      k9s
+      kubectl
+      talosctl
     ];
   };
 
@@ -188,7 +202,7 @@
   fonts.packages = with pkgs; [
     noto-fonts
     noto-fonts-cjk-sans
-    noto-fonts-emoji
+    noto-fonts-color-emoji
     liberation_ttf
     fira-code
     fira-code-symbols
