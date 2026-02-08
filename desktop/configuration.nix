@@ -30,11 +30,23 @@
     allowBroken = true;
     android_sdk.accept_license = true;
   };
+
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.systemd-boot.consoleMode = "max";
+  boot.loader.systemd-boot.edk2-uefi-shell.enable = true;
+  boot.loader.systemd-boot.windows = {
+    "11-ltsc" = {
+      title = "Windows 11 Enterprise LTSC IoT";
+      efiDeviceHandle = "HD2d65535a3";
+    };
+  };
+  
   boot.loader.efi.canTouchEfiVariables = true;
-
+  boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
+  boot.kernel.sysctl."kernel.sysrq" = 1;
+  hardware.cpu.amd.updateMicrocode = true;
+  
   # Udev Rules
   services.udev.extraRules = ''
 SUBSYSTEM=="cpu", ACTION=="add", TEST=="online", ATTR{online}=="0", ATTR{online}="1"
@@ -66,7 +78,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   # Additional Kernel Modules
   #boot.extraModulePackages = with config.boot.kernelPackages; [ usbip ];
 
-  boot.initrd.kernelModules = [ "amdgpu" ];
+  boot.initrd.kernelModules = [ "amdgpu" "nvme-tcp" ];
 
   #boot.supportedFilesystems = [ "zfs" ];
 
@@ -133,15 +145,16 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
       #"options no-aaaa"
     ];
     vlans = {
-      vlan150 = { id=150; interface="eth2"; };
+      #vlan150 = { id=150; interface="eth2"; };
+    
       vlan100 = { id=100; interface="eth2"; };
       vlan10  = { id=10;  interface="eth2"; };
     };
     interfaces = {
-      vlan150.ipv6.addresses = [{
-        address = "2602:f766:b:3::90";
-        prefixLength = 64;
-      }];
+      #vlan150.ipv6.addresses = [{
+        #address = "2602:f766:b:3::90";
+        #prefixLength = 64;
+      #}];
       vlan100.ipv4.addresses = [{
         address = "192.168.0.220";
         prefixLength = 24;
@@ -230,7 +243,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   services.xserver.videoDrivers = [ "amdgpu" ];
 
   services.picom = {
-    enable = true;
+    enable = false;
     vSync = true;
     backend = "glx";
   };
@@ -262,12 +275,13 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
     jack.enable = true;
     extraConfig.pipewire-pulse = {
       "20-upmix" = {
-	"stream.properties" = {
+	    "stream.properties" = {
     	  "channelmix.upmix"        = true;
           "channelmix.upmix-method" = "psd";  # none, simple
-          "channelmix.lfe-cutoff"   = 250;
+          "channelmix.mix-lfe"      = true;
+          "channelmix.lfe-cutoff"   = 0;
           "channelmix.fc-cutoff"    = 12000;
-          "channelmix.rear-delay"   = 12.0;
+          "channelmix.rear-delay"   = 10.0;
         };
       };
     };
@@ -285,6 +299,22 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   programs.nh.flake = "/home/nathan/nix";
   programs.chromium.enable = true;
 
+  programs.uwsm = {
+    enable = true;
+    waylandCompositors = {
+      sway = {
+        prettyName = "Sway";
+        comment = "Sway compositor managed by UWSM";
+        binPath = "/run/current-system/sw/bin/sway";
+      };
+
+    #  hyprland = {
+    #    prettyName = "Hyprland";
+    #    comment = "Hyprland compositor managed by UWSM";
+    #    binPath = "/run/current-system/sw/bin/Hyprland";
+    #  };
+    };
+ };
   #android_sdk.accept_license = true;
 
   nix.settings.trusted-users = [ "root" "nathan" ];
@@ -294,15 +324,26 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
     description = "Nathan Moore";
     extraGroups = [ "networkmanager" "wheel" "libvirt" "docker" "adbusers" "dialout" "wireshark" ];
     packages = with pkgs; [
+      killall
+     
       zoxide
       eza
       bat
       zsh
       oh-my-posh
 
+      nvme-cli
+      fio
+      ipmitool
+
       arduino-ide
 
+      antigravity
+
       #globalprotect-openconnect
+
+      linux-wallpaperengine
+
       mprocs
 
       kitty
@@ -338,8 +379,9 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
       # Jetbrains
       jetbrains.clion
       jetbrains.webstorm
+      jetbrains.pycharm
 
-      jetbrains.idea-community
+      jetbrains.idea
       zulu8
 
       jetbrains.datagrip
@@ -347,7 +389,8 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
       jetbrains.goland
       go
 
-      android-studio
+      #android-studio
+      android-tools
 
       nodejs_24
 
@@ -394,7 +437,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
       protontricks
       steamtinkerlaunch
       virt-viewer
-      blender-hip
+      blender
       jellyfin-mpv-shim
       wireguard-tools
       obs-studio
@@ -406,7 +449,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
       btop
       hugo
       legcord
-      youtube-music
+      pear-desktop
       waypipe
       tiny
       kdePackages.kdenlive
@@ -463,8 +506,9 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
 
   # ollama
   services.ollama = {
+    package = pkgs.ollama-rocm;
     enable = false;
-    acceleration = "rocm";
+    #acceleration = "rocm";
     environmentVariables = {
       HSA_OVERRIDE_GFX_VERSION = "11.0.0";
     };
@@ -474,8 +518,6 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
   
-  # Enable ADB
-  programs.adb.enable = true;
   programs.gpu-screen-recorder.enable = true;
   services.udev.packages = [
     pkgs.via
@@ -485,7 +527,8 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   networking.usePredictableInterfaceNames = false;
 
   # hyprland
-  programs.hyprland.enable = false;
+  programs.hyprland.enable = true;
+  programs.hyprland.withUWSM = true;
 
   # direnv
   programs.direnv.enable = true;
@@ -500,7 +543,6 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
     corectrl
     mangohud
     usbutils
-    mtpfs
     ocs-url
     appimage-run
     qt6.qtmultimedia
@@ -665,7 +707,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
         "truenas"
       ];
       locations."/" = {
-        proxyPass = "https://10.69.1.103";
+        proxyPass = "https://10.69.1.100";
         proxyWebsockets = true;
       };
     };
@@ -679,7 +721,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
       sslCertificate = "/etc/ssl/certs/jellyfin-self.crt";
       sslCertificateKey = "/etc/ssl/certs/jellyfin-self.key";
       locations."/" = {
-        proxyPass = "http://10.69.1.224:3001";
+        proxyPass = "http://10.69.1.205:2283";
         proxyWebsockets = true;
       };
     };
@@ -761,7 +803,72 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
 
   environment.pathsToLink = [ "/libexec" ];
 
-  environment.etc."/xdg/menus/plasma-applications.menu".text = builtins.readFile "${pkgs.kdePackages.plasma-workspace}/etc/xdg/menus/plasma-applications.menu";
+  environment.etc = {
+    #nvmeof = {
+    #  source = "/home/nathan/etc/nvme-basic.env";
+    #  target = "nvme/nvme-basic.env";
+    #  mode = "0755";
+    #};
+
+    "/xdg/menus/plasma-applications.menu".text = builtins.readFile "${pkgs.kdePackages.plasma-workspace}/etc/xdg/menus/plasma-applications.menu";
+  
+  };
+
+  systemd.services.backup-service = {
+    description = "Backs up /home into TrueNAS @ 10.69.1.100";
+    enable = false;
+    path = [ pkgs.rsync pkgs.openssh ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.rsync}/bin/rsync -azP --delete --exclude=nathan/mnt --exclude=nathan/.cache -e \"ssh -i /home/nathan/.ssh/id_ed25519\" /home/ root@10.69.1.100:/mnt/BiggusDickus/backups/desktopBackups/home/";
+      User = "nathan";
+      Group = "users";
+    };
+  };
+
+  systemd.timers.backup-timer = {
+    description = "Backup /home on boot";
+    enable = false;
+    timerConfig = {
+      OnBootSec = "5min";
+      OnUnitActiveSec = "1w";
+      Unit = "backup-service.service";
+    };
+    wantedBy = [ "timers.target" ];
+  };
+
+  systemd.services.nvmeof-basic-manager = {
+    enable = true;
+    path = [ pkgs.systemd ];
+    description = "Handles suspend and resume for the service";
+    before = [ "sleep.target" ];
+    wantedBy = [ "sleep.target" ];
+#    stopWhenUnneeded = "yes";
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.systemd}/bin/systemctl stop nvmeof-basic.service";
+      ExecStop = "${pkgs.systemd}/bin/systemctl start nvmeof-basic.service";
+    };
+  };
+
+  systemd.services.nvmeof-basic = {
+
+    enable = true;
+    path = [ pkgs.nvme-cli pkgs.kmod ];
+    description = "Connect NVMe over TCP";
+    after = ["network-online.target"];
+    wants = ["network-online.target"];
+
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStartPre = "${pkgs.kmod}/bin/modprobe nvme-tcp";
+      ExecStart = "${pkgs.nvme-cli}/bin/nvme connect -t tcp -a 10.69.1.100 -s 4420 -n nqn.2011-06.com.truenas:uuid:96e5fce2-d94d-44a3-8337-5c19661f1caa:desktop";
+      ExecStop = "${pkgs.nvme-cli}/bin/nvme disconnect -n nqn.2011-06.com.truenas:uuid:96e5fce2-d94d-44a3-8337-5c19661f1caa:desktop";
+      RemainAfterExit = "yes";
+    };
+
+    wantedBy = ["multi-user.target"];
+  };
 
   # Printing
   services.printing.enable = true;
@@ -812,6 +919,11 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
     options = [ "defaults" "rw" "exec" "_netdev" "nofail"];
   };
 
+  fileSystems."/home/nathan/mnt/bigSSD" = {
+    device = "/dev/disk/by-id/ata-WDC_WDS200T2B0A-00SM50_21412B800613-part3";
+    options = [ "uid=1000" "gid=100" "umask=0022" ];
+  };
+
 #  fileSystems."/home/nathan/mnt/extra" = {
 #    device = "/dev/nvme1n1p2";
 #    fsType = "btrfs";
@@ -820,8 +932,8 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   
   # iscsi stuff
   services.openiscsi.enable = false;
-  services.openiscsi.discoverPortal = "10.69.1.103:3260";
-  services.openiscsi.name = "iqn.2005-10.org.freenas.ctl:nix-scsi";
+  services.openiscsi.discoverPortal = "10.69.1.100:3260";
+  services.openiscsi.name = "iqn.2005-10.org.freenas.ctl:desktop-iscsi";
   services.openiscsi.enableAutoLoginOut = true;
   services.openiscsi.extraConfig = ''
 

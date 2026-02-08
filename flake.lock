@@ -102,11 +102,19 @@
     },
     "nixos-hardware": {
       "locked": {
+<<<<<<< Updated upstream
         "lastModified": 1764440730,
         "narHash": "sha256-ZlJTNLUKQRANlLDomuRWLBCH5792x+6XUJ4YdFRjtO4=",
         "owner": "NixOS",
         "repo": "nixos-hardware",
         "rev": "9154f4569b6cdfd3c595851a6ba51bfaa472d9f3",
+=======
+        "lastModified": 1769302137,
+        "narHash": "sha256-QEDtctEkOsbx8nlFh4yqPEOtr4tif6KTqWwJ37IM2ds=",
+        "owner": "NixOS",
+        "repo": "nixos-hardware",
+        "rev": "a351494b0e35fd7c0b7a1aae82f0afddf4907aa8",
+>>>>>>> Stashed changes
         "type": "github"
       },
       "original": {
@@ -118,11 +126,19 @@
     },
     "nixpkgs": {
       "locked": {
+<<<<<<< Updated upstream
         "lastModified": 1766070988,
         "narHash": "sha256-G/WVghka6c4bAzMhTwT2vjLccg/awmHkdKSd2JrycLc=",
         "owner": "NixOS",
         "repo": "nixpkgs",
         "rev": "c6245e83d836d0433170a16eb185cefe0572f8b8",
+=======
+        "lastModified": 1770197578,
+        "narHash": "sha256-AYqlWrX09+HvGs8zM6ebZ1pwUqjkfpnv8mewYwAo+iM=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "00c21e4c93d963c50d4c0c89bfa84ed6e0694df2",
+>>>>>>> Stashed changes
         "type": "github"
       },
       "original": {
@@ -150,11 +166,19 @@
     },
     "nixpkgs-stable_2": {
       "locked": {
+<<<<<<< Updated upstream
         "lastModified": 1766201043,
         "narHash": "sha256-eplAP+rorKKd0gNjV3rA6+0WMzb1X1i16F5m5pASnjA=",
         "owner": "NixOS",
         "repo": "nixpkgs",
         "rev": "b3aad468604d3e488d627c0b43984eb60e75e782",
+=======
+        "lastModified": 1767313136,
+        "narHash": "sha256-16KkgfdYqjaeRGBaYsNrhPRRENs0qzkQVUooNHtoy2w=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "ac62194c3917d5f474c1a844b6fd6da2db95077d",
+>>>>>>> Stashed changes
         "type": "github"
       },
       "original": {
@@ -166,11 +190,19 @@
     },
     "nixpkgs_2": {
       "locked": {
+<<<<<<< Updated upstream
         "lastModified": 1762977756,
         "narHash": "sha256-4PqRErxfe+2toFJFgcRKZ0UI9NSIOJa+7RXVtBhy4KE=",
         "owner": "NixOS",
         "repo": "nixpkgs",
         "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+=======
+        "lastModified": 1768127708,
+        "narHash": "sha256-1Sm77VfZh3mU0F5OqKABNLWxOuDeHIlcFjsXeeiPazs=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "ffbc9f8cbaacfb331b6017d5a5abb21a492c9a38",
+>>>>>>> Stashed changes
         "type": "github"
       },
       "original": {
@@ -211,11 +243,19 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
+<<<<<<< Updated upstream
         "lastModified": 1764663772,
         "narHash": "sha256-sHqLmm0wAt3PC4vczJeBozI1/f4rv9yp3IjkClHDXDs=",
         "owner": "quickshell-mirror",
         "repo": "quickshell",
         "rev": "26531fc46ef17e9365b03770edd3fb9206fcb460",
+=======
+        "lastModified": 1769593411,
+        "narHash": "sha256-WW00FaBiUmQyxvSbefvgxIjwf/WmRrEGBbwMHvW/7uQ=",
+        "owner": "quickshell-mirror",
+        "repo": "quickshell",
+        "rev": "1e4d804e7f3fa7465811030e8da2bf10d544426a",
+>>>>>>> Stashed changes
         "type": "github"
       },
       "original": {
@@ -262,11 +302,19 @@
         ]
       },
       "locked": {
+<<<<<<< Updated upstream
         "lastModified": 1766289575,
         "narHash": "sha256-BOKCwOQQIP4p9z8DasT5r+qjri3x7sPCOq+FTjY8Z+o=",
         "owner": "Mic92",
         "repo": "sops-nix",
         "rev": "9836912e37aef546029e48c8749834735a6b9dad",
+=======
+        "lastModified": 1770145881,
+        "narHash": "sha256-ktjWTq+D5MTXQcL9N6cDZXUf9kX8JBLLBLT0ZyOTSYY=",
+        "owner": "Mic92",
+        "repo": "sops-nix",
+        "rev": "17eea6f3816ba6568b8c81db8a4e6ca438b30b7c",
+>>>>>>> Stashed changes
         "type": "github"
       },
       "original": {
