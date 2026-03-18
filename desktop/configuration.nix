@@ -8,7 +8,7 @@
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
       ./timers.nix
-      #./overlays.nix
+#     ./overlays.nix
     ];
 
   # Enabling flakes and the nix command
@@ -70,10 +70,13 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   # Additional Kernel Params
   boot.kernelParams = [ 
     "amdgpu.ppfeaturemask=0xfff7ffff" 
-    "resume_offset=48752640"
+#   "resume_offset=48752640"
   ]; 
 
   boot.resumeDevice = "/dev/disk/by-uuid/2ee11375-6999-431d-a160-32bd213dbc83";
+
+  zramSwap.enable = true;
+  #zramSwap.writebackDevice = "/dev/nvme1n1p3";
 
   # Additional Kernel Modules
   #boot.extraModulePackages = with config.boot.kernelPackages; [ usbip ];
@@ -130,14 +133,30 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
     ];
     dyndns.interface = "vlan100";
   };
+
+  security.pam.loginLimits = [
+    { domain = "@users"; item = "rtprio"; type = "-"; value = 1; }
+    { domain = "fork"; item = "nproc"; type = "-"; value = 512; }
+    { domain = "fork"; item = "cpu"; type = "-"; value = 1; }
+  ];
   networking.hostName = "nixos"; # Define your hostname.
   networking.networkmanager.enable = false;
   #boot.initrd.systemd.network.wait-online.enable = true;
   #systemd.network.wait-online.enable = true;
 
+  systemd.network.links = {
+    "10-eth0" = {matchConfig.MACAddress = "b8:59:9f:d5:86:6a"; linkConfig.Name = "ether0";};
+    "10-eth3" = {matchConfig.MACAddress = "b8:59:9f:d5:86:6b"; linkConfig.Name = "ether1";};
+    "10-eth1" = {matchConfig.MACAddress = "58:11:22:dc:8a:2a"; linkConfig.Name = "ether2";};
+    "10-eth2" = {matchConfig.MACAddress = "58:11:22:dc:8a:29"; linkConfig.Name = "ether3";};
+  };
+
   networking = {
     nameservers = [ "10.69.1.1" ];#"2602:f766:b:4000::1" ];
     defaultGateway = "10.69.1.1";
+    iproute2.rttablesExtraConfig = ''
+200 44net
+    '';
     hostId = "7fd0a66b";
   #  dhcpcd.extraConfig = "nohook resolv.conf";
   #  networkmanager.dns = "none";
@@ -145,10 +164,11 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
       #"options no-aaaa"
     ];
     vlans = {
-      #vlan150 = { id=150; interface="eth2"; };
+      #vlan150 = { id=150; interface="eth0"; };
     
-      vlan100 = { id=100; interface="eth2"; };
-      vlan10  = { id=10;  interface="eth2"; };
+      vlan100 = { id=100; interface="ether0"; };
+      vlan44  = { id=44;  interface="ether0"; };
+      vlan10  = { id=10;  interface="ether0"; };
     };
     interfaces = {
       #vlan150.ipv6.addresses = [{
@@ -170,12 +190,13 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
           via = "10.69.1.1";
         }];
       };
-      eth2.useDHCP = false;      
-#      eth2.ipv4.addresses = [{
+      ether0.useDHCP = false;
+      ether2.wakeOnLan.enable = true;
+#      eth0.ipv4.addresses = [{
 #        address = "10.69.1.90";
 #	    prefixLength = 24;
 #      }];
-#      eth2.ipv6.addresses = [{
+#      eth0.ipv6.addresses = [{
 #        address = "2602:f766:b:4000::90";
 #	 prefixLength = 50;
 #      }];
@@ -210,7 +231,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   
   services.desktopManager.plasma6.enable = true;
   services.xserver.windowManager.i3.enable = true;
-  services.displayManager.defaultSession = "none+i3";
+  services.displayManager.defaultSession = "sway";
 
   services.xrdp.enable = true;
   services.xrdp.defaultWindowManager = "i3";
@@ -281,7 +302,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
           "channelmix.mix-lfe"      = true;
           "channelmix.lfe-cutoff"   = 0;
           "channelmix.fc-cutoff"    = 12000;
-          "channelmix.rear-delay"   = 10.0;
+          "channelmix.rear-delay"   = 5.8;
         };
       };
     };
@@ -314,16 +335,48 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
     #    binPath = "/run/current-system/sw/bin/Hyprland";
     #  };
     };
- };
+  };
+
+  programs.qdmr.enable = true;
+  services.sdrplayApi.enable = true;
   #android_sdk.accept_license = true;
 
   nix.settings.trusted-users = [ "root" "nathan" ];
+  users.users.fork = {
+    shell = pkgs.zsh;
+    isNormalUser = true;
+    description = "Lowered process limit for fork bombs";
+    extraGroups = ["wheel" "docker"];
+    packages = with pkgs; [
+      neovim
+      wget
+    ];
+  };
   users.users.nathan = {
     shell = pkgs.zsh;
     isNormalUser = true;
     description = "Nathan Moore";
     extraGroups = [ "networkmanager" "wheel" "libvirt" "docker" "adbusers" "dialout" "wireshark" ];
     packages = with pkgs; [
+      gnuradio
+      gqrx
+      sdrplay
+      soapysdr
+      soapysdr-with-plugins
+
+      ast-grep
+      luajitPackages.luarocks-nix
+
+      fd
+      lazygit
+      ghostscript
+      tectonic-unwrapped
+      mermaid-cli
+
+      gemini-cli-bin
+      audacity
+
+      ripgrep
       killall
      
       zoxide
@@ -339,8 +392,6 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
       arduino-ide
 
       antigravity
-
-      #globalprotect-openconnect
 
       linux-wallpaperengine
 
@@ -397,7 +448,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
       fastfetch
       #jellyfin-media-player
       prismlauncher
-      signal-desktop-bin
+      signal-desktop
       dig
       p7zip
 
@@ -441,9 +492,10 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
       jellyfin-mpv-shim
       wireguard-tools
       obs-studio
+      wf-recorder
       darktable
       zoom-us
-      lunarvim
+      
       bottles
       wl-clipboard
       btop
@@ -465,11 +517,11 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
       lxqt.pavucontrol-qt
       
       # Python
-      python311
-      python311Packages.pip
-      python311Packages.requests
+      python314
+      python314Packages.pip
+      python314Packages.requests
       #python311Packages.httpx
-      python311Packages.beautifulsoup4
+      python314Packages.beautifulsoup4
 
       thunderbird
 
@@ -507,7 +559,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   # ollama
   services.ollama = {
     package = pkgs.ollama-rocm;
-    enable = false;
+    enable = true;
     #acceleration = "rocm";
     environmentVariables = {
       HSA_OVERRIDE_GFX_VERSION = "11.0.0";
@@ -527,8 +579,8 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   networking.usePredictableInterfaceNames = false;
 
   # hyprland
-  programs.hyprland.enable = true;
-  programs.hyprland.withUWSM = true;
+  programs.hyprland.enable = false;
+  programs.hyprland.withUWSM = false;
 
   # direnv
   programs.direnv.enable = true;
@@ -550,7 +602,6 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
     fzf
     kdiskmark
     pciutils
-    helvum
     lxqt.lxqt-policykit
     gdu
 
@@ -567,13 +618,13 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
     feh
     alacritty
     swaybg
-    xdg-desktop-portal-wlr
 
     # Wayland Screenshot
     grim
     slurp
 
     # c/cpp deps
+    gemini-cli-bin
     gcc
     gnumake
 
@@ -774,10 +825,12 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   # Enables flatpak
   services.flatpak.enable = true;
 
-  xdg.portal.enable = true;
-  xdg.portal.wlr.enable = true;
-  xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
-  #xdg.portal.config.common.default = "kde";
+  xdg.portal = {
+    enable = true;
+    wlr.enable = true;
+    extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+    config.common.default = "wlr";
+  };
 
   # Environment Variables
   environment.variables = {
