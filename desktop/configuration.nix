@@ -8,7 +8,7 @@
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
       ./timers.nix
-#     ./overlays.nix
+      ./overlays.nix
     ];
 
   # Enabling flakes and the nix command
@@ -89,7 +89,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   #boot.kernelModules = [  ];
 
   security.krb5 = {
-    enable = true;
+    enable = false;
     settings = {
 
       libdefaults = {
@@ -134,11 +134,6 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
     dyndns.interface = "vlan100";
   };
 
-  security.pam.loginLimits = [
-    { domain = "@users"; item = "rtprio"; type = "-"; value = 1; }
-    { domain = "fork"; item = "nproc"; type = "-"; value = 512; }
-    { domain = "fork"; item = "cpu"; type = "-"; value = 1; }
-  ];
   networking.hostName = "nixos"; # Define your hostname.
   networking.networkmanager.enable = false;
   #boot.initrd.systemd.network.wait-online.enable = true;
@@ -190,8 +185,26 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
           via = "10.69.1.1";
         }];
       };
+      vlan44.ipv4 = {
+        addresses = [{
+          address = "44.30.111.90";
+          prefixLength = 24;
+        }];
+        routes = [{
+          address = "0.0.0.0";
+          prefixLength = 0;
+          via = "44.30.111.3";
+          options = {
+              mtu = "1360";
+              src = "44.30.111.90";
+              preference = "255";
+            };
+        }];
+      };
       ether0.useDHCP = false;
       ether2.wakeOnLan.enable = true;
+      ether2.useDHCP = false;
+      "44net".useDHCP = false;
 #      eth0.ipv4.addresses = [{
 #        address = "10.69.1.90";
 #	    prefixLength = 24;
@@ -256,6 +269,13 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
     wantedBy = [ "multi-user.target" ]; # starts after login 
   };
 
+  systemd.user.services.fix-screen = {
+    description = "Fixes vertical monitor wonkyness";
+    script = '' /home/nathan/.local/bin/fix-screen '';
+    wantedBy = [ "multi-user.target" ];
+    after = [ "sleep.target" ];
+  };
+
   # Enable 32bit OGL
   hardware.graphics = {
     enable = true;
@@ -308,11 +328,6 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
     };
   };
 
-  services.globalprotect = {
-    enable = false;
-    csdWrapper = "${pkgs.openconnect}/libexec/openconnect/hipreport.sh";
-  };
-
   programs.noisetorch.enable = true;
   programs.zsh.enable = true;
   programs.fish.enable = true;
@@ -339,8 +354,18 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
 
   programs.qdmr.enable = true;
   services.sdrplayApi.enable = true;
+  programs.envision = {
+    enable = true;
+    openFirewall = true; # This is set true by default
+  };
   #android_sdk.accept_license = true;
 
+  security.pam.loginLimits = [
+    { domain = "@users"; item = "rtprio"; type = "-"; value = 1; }
+    { domain = "fork"; item = "nproc"; type = "-"; value = 512; }
+    { domain = "fork"; item = "cpu"; type = "-"; value = 1; }
+  ];
+  
   nix.settings.trusted-users = [ "root" "nathan" ];
   users.users.fork = {
     shell = pkgs.zsh;
@@ -358,11 +383,15 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
     description = "Nathan Moore";
     extraGroups = [ "networkmanager" "wheel" "libvirt" "docker" "adbusers" "dialout" "wireshark" ];
     packages = with pkgs; [
-      gnuradio
+      chirp
+      #gnuradio
       gqrx
       sdrplay
       soapysdr
+      soapysdrplay
       soapysdr-with-plugins
+
+      supercell-wx
 
       ast-grep
       luajitPackages.luarocks-nix
@@ -391,9 +420,8 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
 
       arduino-ide
 
+      vscode-fhs
       antigravity
-
-      linux-wallpaperengine
 
       mprocs
 
@@ -465,7 +493,9 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
 
       #jetbrains.idea-community-bin
 
-      (pkgs.wrapFirefox (pkgs.firefox-unwrapped.override { pipewireSupport = true;}) {})
+      #(pkgs.wrapFirefox (pkgs.firefox-unwrapped.override { pipewireSupport = true;}) {})
+      firefox
+      firefox-esr
       ungoogled-chromium
       libnotify # Possibly fixing notification issues with firefox
 
@@ -489,14 +519,13 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
       steamtinkerlaunch
       virt-viewer
       blender
-      jellyfin-mpv-shim
       wireguard-tools
       obs-studio
       wf-recorder
       darktable
       zoom-us
       
-      bottles
+      #bottles
       wl-clipboard
       btop
       hugo
@@ -514,8 +543,11 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
       lxqt.pcmanfm-qt
       lxqt.lxqt-menu-data
       lxqt.lxqt-themes
-      lxqt.pavucontrol-qt
+      #lxqt.pavucontrol-qt
+      pwvucontrol # Replaces ^
       
+      qpwgraph # Helvum replacement
+
       # Python
       python314
       python314Packages.pip
@@ -609,7 +641,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
     btrfs-progs
 
     # sway config
-    polybarFull
+    #polybarFull
     #mako
     dunst
     waybar
@@ -644,7 +676,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
     xdotool
     unixtools.xxd
     yad
-    xorg.xwininfo
+    xwininfo
 
     # Libre Office
     libreoffice-qt
@@ -654,7 +686,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
     onlyoffice-desktopeditors
 
     # Development resources
-    xorg.xhost
+    xhost
     git
     neovim
     docker
@@ -890,6 +922,25 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
     wantedBy = [ "timers.target" ];
   };
 
+  systemd.timers."suspend-at-night" = {
+    wantedBy = ["timers.target"];
+    enable = false;
+    timerConfig = {
+      OnCalendar = "Mon,Tue,Wed,Thurs,Fri *-*-* 00:00:00";
+      Persistent = false;
+      Unit = "suspend-night.service";
+    };
+  };
+
+  systemd.services."suspend-night" = {
+    enable = false;
+    path = [ pkgs.systemd ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "/home/nathan/.local/bin/sus";
+    };
+  };
+
   systemd.services.nvmeof-basic-manager = {
     enable = true;
     path = [ pkgs.systemd ];
@@ -974,6 +1025,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
 
   fileSystems."/home/nathan/mnt/bigSSD" = {
     device = "/dev/disk/by-id/ata-WDC_WDS200T2B0A-00SM50_21412B800613-part3";
+    fsType = "ntfs";
     options = [ "uid=1000" "gid=100" "umask=0022" ];
   };
 
