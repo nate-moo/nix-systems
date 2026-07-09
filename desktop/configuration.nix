@@ -147,7 +147,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   };
 
   networking = {
-    nameservers = [ "10.69.1.1" ];#"2602:f766:b:4000::1" ];
+    nameservers = [ "10.69.1.2" ];#"2602:f766:b:4000::1" ];
     defaultGateway = "10.69.1.1";
     iproute2.rttablesExtraConfig = ''
 200 44net
@@ -187,8 +187,8 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
       };
       vlan44.ipv4 = {
         addresses = [{
-          address = "44.30.111.90";
-          prefixLength = 24;
+          address = "44.30.111.30";
+          prefixLength = 27;
         }];
         routes = [{
           address = "0.0.0.0";
@@ -196,7 +196,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
           via = "44.30.111.3";
           options = {
               mtu = "1360";
-              src = "44.30.111.90";
+              src = "44.30.111.30";
               preference = "255";
             };
         }];
@@ -396,6 +396,10 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
       ast-grep
       luajitPackages.luarocks-nix
 
+      nil
+      harper
+
+      cyme
       fd
       lazygit
       ghostscript
@@ -592,6 +596,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   services.ollama = {
     package = pkgs.ollama-rocm;
     enable = true;
+    host = "0.0.0.0";
     #acceleration = "rocm";
     environmentVariables = {
       HSA_OVERRIDE_GFX_VERSION = "11.0.0";
@@ -636,6 +641,8 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
     pciutils
     lxqt.lxqt-policykit
     gdu
+
+    uv
 
     #ceph-client
     btrfs-progs
@@ -839,6 +846,15 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
 
   10.69.1.210    kube.clusterfuck.local
   10.69.1.212    kube.clusterfuck.local
+  
+
+  10.69.1.10      freeipa.ds.as213801.net
+  10.69.1.210     talos-control-1
+  10.69.1.211     talos-agent-1
+  10.69.1.212     talos-control-2
+  10.69.1.213     talos-agent-2
+  10.69.1.214     talos-control-3
+  10.69.1.215     talos-agent-3 
   '';
   # 10.69.1.214    kube.clusterfuck.local
   # '';
