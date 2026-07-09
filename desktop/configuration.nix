@@ -1,18 +1,27 @@
 # Edit this configuration file to define what should be installed on
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
-{ config, pkgs, lib, inputs, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  inputs,
+  ...
+}:
 
 {
-  imports =
-    [ # Include the results of the hardware scan.
-      ./hardware-configuration.nix
-      ./timers.nix
-      ./overlays.nix
-    ];
+  imports = [
+    # Include the results of the hardware scan.
+    ./hardware-configuration.nix
+    ./timers.nix
+    ./overlays.nix
+  ];
 
   # Enabling flakes and the nix command
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.settings.experimental-features = [
+    "nix-command"
+    "flakes"
+  ];
 
   # BAD
   nixpkgs.config = {
@@ -41,22 +50,22 @@
       efiDeviceHandle = "HD2d65535a3";
     };
   };
-  
+
   boot.loader.efi.canTouchEfiVariables = true;
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
   boot.kernel.sysctl."kernel.sysrq" = 1;
   hardware.cpu.amd.updateMicrocode = true;
-  
+
   # Udev Rules
   services.udev.extraRules = ''
-SUBSYSTEM=="cpu", ACTION=="add", TEST=="online", ATTR{online}=="0", ATTR{online}="1"
-SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{state}="online"
+    SUBSYSTEM=="cpu", ACTION=="add", TEST=="online", ATTR{online}=="0", ATTR{online}="1"
+    SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{state}="online"
   '';
 
   services.nfs.server = {
     enable = true;
     exports = ''
-#/home/nathan *(rw,anonuid=0,anongid=0,all_squash)
+      #/home/nathan *(rw,anonuid=0,anongid=0,all_squash)
     '';
   };
 
@@ -68,10 +77,10 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
   # Additional Kernel Params
-  boot.kernelParams = [ 
-    "amdgpu.ppfeaturemask=0xfff7ffff" 
-#   "resume_offset=48752640"
-  ]; 
+  boot.kernelParams = [
+    "amdgpu.ppfeaturemask=0xfff7ffff"
+    #   "resume_offset=48752640"
+  ];
 
   boot.resumeDevice = "/dev/disk/by-uuid/2ee11375-6999-431d-a160-32bd213dbc83";
 
@@ -81,7 +90,10 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   # Additional Kernel Modules
   #boot.extraModulePackages = with config.boot.kernelPackages; [ usbip ];
 
-  boot.initrd.kernelModules = [ "amdgpu" "nvme-tcp" ];
+  boot.initrd.kernelModules = [
+    "amdgpu"
+    "nvme-tcp"
+  ];
 
   #boot.supportedFilesystems = [ "zfs" ];
 
@@ -140,79 +152,110 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   #systemd.network.wait-online.enable = true;
 
   systemd.network.links = {
-    "10-eth0" = {matchConfig.MACAddress = "b8:59:9f:d5:86:6a"; linkConfig.Name = "ether0";};
-    "10-eth3" = {matchConfig.MACAddress = "b8:59:9f:d5:86:6b"; linkConfig.Name = "ether1";};
-    "10-eth1" = {matchConfig.MACAddress = "58:11:22:dc:8a:2a"; linkConfig.Name = "ether2";};
-    "10-eth2" = {matchConfig.MACAddress = "58:11:22:dc:8a:29"; linkConfig.Name = "ether3";};
+    "10-eth0" = {
+      matchConfig.MACAddress = "b8:59:9f:d5:86:6a";
+      linkConfig.Name = "ether0";
+    };
+    "10-eth3" = {
+      matchConfig.MACAddress = "b8:59:9f:d5:86:6b";
+      linkConfig.Name = "ether1";
+    };
+    "10-eth1" = {
+      matchConfig.MACAddress = "58:11:22:dc:8a:2a";
+      linkConfig.Name = "ether2";
+    };
+    "10-eth2" = {
+      matchConfig.MACAddress = "58:11:22:dc:8a:29";
+      linkConfig.Name = "ether3";
+    };
   };
 
   networking = {
-    nameservers = [ "10.69.1.2" ];#"2602:f766:b:4000::1" ];
+    nameservers = [ "10.69.1.2" ]; # "2602:f766:b:4000::1" ];
     defaultGateway = "10.69.1.1";
     iproute2.rttablesExtraConfig = ''
-200 44net
+      200 44net
     '';
     hostId = "7fd0a66b";
-  #  dhcpcd.extraConfig = "nohook resolv.conf";
-  #  networkmanager.dns = "none";
+    #  dhcpcd.extraConfig = "nohook resolv.conf";
+    #  networkmanager.dns = "none";
     resolvconf.extraOptions = [
       #"options no-aaaa"
     ];
     vlans = {
       #vlan150 = { id=150; interface="eth0"; };
-    
-      vlan100 = { id=100; interface="ether0"; };
-      vlan44  = { id=44;  interface="ether0"; };
-      vlan10  = { id=10;  interface="ether0"; };
+
+      vlan100 = {
+        id = 100;
+        interface = "ether0";
+      };
+      vlan44 = {
+        id = 44;
+        interface = "ether0";
+      };
+      vlan10 = {
+        id = 10;
+        interface = "ether0";
+      };
     };
     interfaces = {
       #vlan150.ipv6.addresses = [{
-        #address = "2602:f766:b:3::90";
-        #prefixLength = 64;
+      #address = "2602:f766:b:3::90";
+      #prefixLength = 64;
       #}];
-      vlan100.ipv4.addresses = [{
-        address = "192.168.0.220";
-        prefixLength = 24;
-      }];
-      vlan10.ipv4 = {
-        addresses = [{
-          address = "10.69.1.90";
+      vlan100.ipv4.addresses = [
+        {
+          address = "192.168.0.220";
           prefixLength = 24;
-        }];
-        routes = [{
-          address = "0.0.0.0";
-          prefixLength = 0;
-          via = "10.69.1.1";
-        }];
+        }
+      ];
+      vlan10.ipv4 = {
+        addresses = [
+          {
+            address = "10.69.1.90";
+            prefixLength = 24;
+          }
+        ];
+        routes = [
+          {
+            address = "0.0.0.0";
+            prefixLength = 0;
+            via = "10.69.1.1";
+          }
+        ];
       };
       vlan44.ipv4 = {
-        addresses = [{
-          address = "44.30.111.30";
-          prefixLength = 27;
-        }];
-        routes = [{
-          address = "0.0.0.0";
-          prefixLength = 0;
-          via = "44.30.111.3";
-          options = {
+        addresses = [
+          {
+            address = "44.30.111.30";
+            prefixLength = 27;
+          }
+        ];
+        routes = [
+          {
+            address = "0.0.0.0";
+            prefixLength = 0;
+            via = "44.30.111.3";
+            options = {
               mtu = "1360";
               src = "44.30.111.30";
               preference = "255";
             };
-        }];
+          }
+        ];
       };
       ether0.useDHCP = false;
       ether2.wakeOnLan.enable = true;
       ether2.useDHCP = false;
       "44net".useDHCP = false;
-#      eth0.ipv4.addresses = [{
-#        address = "10.69.1.90";
-#	    prefixLength = 24;
-#      }];
-#      eth0.ipv6.addresses = [{
-#        address = "2602:f766:b:4000::90";
-#	 prefixLength = 50;
-#      }];
+      #      eth0.ipv4.addresses = [{
+      #        address = "10.69.1.90";
+      #	    prefixLength = 24;
+      #      }];
+      #      eth0.ipv6.addresses = [{
+      #        address = "2602:f766:b:4000::90";
+      #	 prefixLength = 50;
+      #      }];
     };
   };
 
@@ -236,19 +279,19 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
 
   # Enable the X11 windowing system.
   services.xserver.enable = true;
-  
+
   services.xserver.displayManager.startx.enable = true;
 
   services.displayManager.sddm.enable = true;
   services.displayManager.sddm.wayland.enable = true;
-  
+
   services.desktopManager.plasma6.enable = true;
   services.xserver.windowManager.i3.enable = true;
   services.displayManager.defaultSession = "sway";
 
   services.xrdp.enable = true;
   services.xrdp.defaultWindowManager = "i3";
-  
+
   powerManagement.enable = true;
 
   hardware.keyboard.qmk.enable = true;
@@ -263,15 +306,15 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   };
 
   # Start ISCSI stuff on login
-  systemd.user.services.iscsi-init = { 
-    description = "initiates iscsi"; 
-    script = '' /home/nathan/.local/bin/iscsi-init ''; 
-    wantedBy = [ "multi-user.target" ]; # starts after login 
+  systemd.user.services.iscsi-init = {
+    description = "initiates iscsi";
+    script = "/home/nathan/.local/bin/iscsi-init ";
+    wantedBy = [ "multi-user.target" ]; # starts after login
   };
 
   systemd.user.services.fix-screen = {
     description = "Fixes vertical monitor wonkyness";
-    script = '' /home/nathan/.local/bin/fix-screen '';
+    script = "/home/nathan/.local/bin/fix-screen ";
     wantedBy = [ "multi-user.target" ];
     after = [ "sleep.target" ];
   };
@@ -316,13 +359,13 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
     jack.enable = true;
     extraConfig.pipewire-pulse = {
       "20-upmix" = {
-	    "stream.properties" = {
-    	  "channelmix.upmix"        = true;
-          "channelmix.upmix-method" = "psd";  # none, simple
-          "channelmix.mix-lfe"      = true;
-          "channelmix.lfe-cutoff"   = 0;
-          "channelmix.fc-cutoff"    = 12000;
-          "channelmix.rear-delay"   = 5.8;
+        "stream.properties" = {
+          "channelmix.upmix" = true;
+          "channelmix.upmix-method" = "psd"; # none, simple
+          "channelmix.mix-lfe" = true;
+          "channelmix.lfe-cutoff" = 0;
+          "channelmix.fc-cutoff" = 12000;
+          "channelmix.rear-delay" = 5.8;
         };
       };
     };
@@ -344,11 +387,11 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
         binPath = "/run/current-system/sw/bin/sway";
       };
 
-    #  hyprland = {
-    #    prettyName = "Hyprland";
-    #    comment = "Hyprland compositor managed by UWSM";
-    #    binPath = "/run/current-system/sw/bin/Hyprland";
-    #  };
+      #  hyprland = {
+      #    prettyName = "Hyprland";
+      #    comment = "Hyprland compositor managed by UWSM";
+      #    binPath = "/run/current-system/sw/bin/Hyprland";
+      #  };
     };
   };
 
@@ -361,27 +404,60 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   #android_sdk.accept_license = true;
 
   security.pam.loginLimits = [
-    { domain = "@users"; item = "rtprio"; type = "-"; value = 1; }
-    { domain = "fork"; item = "nproc"; type = "-"; value = 512; }
-    { domain = "fork"; item = "cpu"; type = "-"; value = 1; }
+    {
+      domain = "@users";
+      item = "rtprio";
+      type = "-";
+      value = 1;
+    }
+    {
+      domain = "fork";
+      item = "nproc";
+      type = "-";
+      value = 512;
+    }
+    {
+      domain = "fork";
+      item = "cpu";
+      type = "-";
+      value = 1;
+    }
   ];
-  
-  nix.settings.trusted-users = [ "root" "nathan" ];
+
+  nix.settings.trusted-users = [
+    "root"
+    "nathan"
+  ];
+
   users.users.fork = {
     shell = pkgs.zsh;
     isNormalUser = true;
     description = "Lowered process limit for fork bombs";
-    extraGroups = ["wheel" "docker"];
+    extraGroups = [
+      "wheel"
+      "docker"
+    ];
+
     packages = with pkgs; [
       neovim
       wget
     ];
   };
+
   users.users.nathan = {
     shell = pkgs.zsh;
     isNormalUser = true;
     description = "Nathan Moore";
-    extraGroups = [ "networkmanager" "wheel" "libvirt" "docker" "adbusers" "dialout" "wireshark" ];
+    extraGroups = [
+      "networkmanager"
+      "wheel"
+      "libvirt"
+      "docker"
+      "adbusers"
+      "dialout"
+      "wireshark"
+    ];
+
     packages = with pkgs; [
       chirp
       #gnuradio
@@ -411,7 +487,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
 
       ripgrep
       killall
-     
+
       zoxide
       eza
       bat
@@ -528,7 +604,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
       wf-recorder
       darktable
       zoom-us
-      
+
       #bottles
       wl-clipboard
       btop
@@ -549,7 +625,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
       lxqt.lxqt-themes
       #lxqt.pavucontrol-qt
       pwvucontrol # Replaces ^
-      
+
       qpwgraph # Helvum replacement
 
       # Python
@@ -603,10 +679,9 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
     };
   };
 
-
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
-  
+
   programs.gpu-screen-recorder.enable = true;
   services.udev.packages = [
     pkgs.via
@@ -622,121 +697,123 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   # direnv
   programs.direnv.enable = true;
 
-  environment.systemPackages = with pkgs; [
-    # Misc tools and programs
-    nfs-utils
-    flatpak
-    gparted
-    gamescope
-    wget
-    corectrl
-    mangohud
-    usbutils
-    ocs-url
-    appimage-run
-    qt6.qtmultimedia
-    ntfs3g
-    fzf
-    kdiskmark
-    pciutils
-    lxqt.lxqt-policykit
-    gdu
+  environment.systemPackages =
+    with pkgs;
+    [
+      # Misc tools and programs
+      nfs-utils
+      flatpak
+      gparted
+      gamescope
+      wget
+      corectrl
+      mangohud
+      usbutils
+      ocs-url
+      appimage-run
+      qt6.qtmultimedia
+      ntfs3g
+      fzf
+      kdiskmark
+      pciutils
+      lxqt.lxqt-policykit
+      gdu
 
-    uv
+      uv
 
-    #ceph-client
-    btrfs-progs
+      #ceph-client
+      btrfs-progs
 
-    # sway config
-    #polybarFull
-    #mako
-    dunst
-    waybar
-    wofi
-    rofi
-    feh
-    alacritty
-    swaybg
+      # sway config
+      #polybarFull
+      #mako
+      dunst
+      waybar
+      wofi
+      rofi
+      feh
+      alacritty
+      swaybg
 
-    # Wayland Screenshot
-    grim
-    slurp
+      # Wayland Screenshot
+      grim
+      slurp
 
-    # c/cpp deps
-    gemini-cli-bin
-    gcc
-    gnumake
+      # c/cpp deps
+      gemini-cli-bin
+      gcc
+      gnumake
 
-    # libsForQt5
-    kdePackages.kio-extras
-    # libsForQt5.libqtav -- Removed
-    kdePackages.qtmultimedia
-    kdePackages.phonon
-    kdePackages.kdeconnect-kde
-    kdePackages.plasma-browser-integration
-    #kdePackages.xdg-desktop-portal-kde
-    kdePackages.plasma-workspace
+      # libsForQt5
+      kdePackages.kio-extras
+      # libsForQt5.libqtav -- Removed
+      kdePackages.qtmultimedia
+      kdePackages.phonon
+      kdePackages.kdeconnect-kde
+      kdePackages.plasma-browser-integration
+      #kdePackages.xdg-desktop-portal-kde
+      kdePackages.plasma-workspace
 
+      # Steam Tinker Launch Deps
+      unzip
+      xdotool
+      unixtools.xxd
+      yad
+      xwininfo
 
-    # Steam Tinker Launch Deps
-    unzip
-    xdotool
-    unixtools.xxd
-    yad
-    xwininfo
+      # Libre Office
+      libreoffice-qt
+      hunspell
+      hunspellDicts.en_US
 
-    # Libre Office
-    libreoffice-qt
-    hunspell
-    hunspellDicts.en_US
+      onlyoffice-desktopeditors
 
-    onlyoffice-desktopeditors
+      # Development resources
+      xhost
+      git
+      neovim
+      docker
 
-    # Development resources
-    xhost
-    git
-    neovim
-    docker
+      # Filesystems
+      cifs-utils
+      samba
 
-    # Filesystems
-    cifs-utils
-    samba
+      # Encoding
+      libaom
+      rav1e
+      svt-av1
 
-    # Encoding
-    libaom
-    rav1e
-    svt-av1
+      # --
+      # codecs and video stuff
+      ffmpeg
+      gst_all_1.gstreamer
+      gst_all_1.gst-vaapi
+      gst_all_1.gst-plugins-ugly
+      gst_all_1.gst-plugins-good
+      gst_all_1.gst-plugins-bad
+      gst_all_1.gst-plugins-rs
+      gst_all_1.gst-libav
+      gst_all_1.gst-plugins-base
 
-    # --
-    # codecs and video stuff
-    ffmpeg
-    gst_all_1.gstreamer
-    gst_all_1.gst-vaapi
-    gst_all_1.gst-plugins-ugly
-    gst_all_1.gst-plugins-good
-    gst_all_1.gst-plugins-bad
-    gst_all_1.gst-plugins-rs
-    gst_all_1.gst-libav
-    gst_all_1.gst-plugins-base
+      # Vulkan Tools
+      vulkan-loader
+      vulkan-validation-layers
+      vulkan-tools
 
-    # Vulkan Tools
-    vulkan-loader
-    vulkan-validation-layers
-    vulkan-tools
+      # --
+      openiscsi
 
-    # --
-    openiscsi
+      # --
+      fuse3
+      sshfs
 
-    # --
-    fuse3
-    sshfs
+      # -- keyboards
+      via
 
-    # -- keyboards
-    via
-
-  ] ++ [
-    #inputs.quickshell.packages.x86_64-linux.default
-  ];
+    ]
+    ++ [
+      #inputs.quickshell.packages.x86_64-linux.default
+    ];
 
   # SwayFX
   services.gnome.gnome-keyring.enable = true;
@@ -754,17 +831,23 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
       folders = {
         "Kubernetes" = {
           path = "/home/nathan/talos";
-	  devices = [ "nas" "surface" ];
-	};
-	"Nix-Config" = {
+          devices = [
+            "nas"
+            "surface"
+          ];
+        };
+        "Nix-Config" = {
           path = "/home/nathan/.nixos-config";
-	  devices = [ "nas" ];
-	};
+          devices = [ "nas" ];
+        };
         "notes" = {
           path = "/home/nathan/tab-notes";
-	  devices = [ "nas" "tablet" ];
-	  type = "receiveonly";
-	};
+          devices = [
+            "nas"
+            "tablet"
+          ];
+          type = "receiveonly";
+        };
       };
     };
   };
@@ -773,7 +856,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
 
   # Nginx
   services.nginx.enable = true;
-  services.nginx.virtualHosts = rec {
+  services.nginx.virtualHosts = {
     "jellyfin-lab.naed3r.xyz" = {
       addSSL = true;
       serverAliases = [
@@ -832,29 +915,29 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   };
 
   networking.extraHosts = ''
-  127.0.0.1      jellyfin-lab.naed3r.xyz
-  127.0.0.1      truenas.naed3r.xyz
-  127.0.0.1      immich.naed3r.xyz
-  127.0.0.1      nextcloud.naed3r.xyz
-  
-  138.67.208.153 oreprint.mines.edu
-  138.67.190.221 isengard.mines.edu
-  138.67.208.30  mio-ondemand.mines.edu
-  138.67.212.56  ada.mines.edu
+    127.0.0.1      jellyfin-lab.naed3r.xyz
+    127.0.0.1      truenas.naed3r.xyz
+    127.0.0.1      immich.naed3r.xyz
+    127.0.0.1      nextcloud.naed3r.xyz
 
-  10.69.1.10     freeipa.ds.as213801.net
+    138.67.208.153 oreprint.mines.edu
+    138.67.190.221 isengard.mines.edu
+    138.67.208.30  mio-ondemand.mines.edu
+    138.67.212.56  ada.mines.edu
 
-  10.69.1.210    kube.clusterfuck.local
-  10.69.1.212    kube.clusterfuck.local
-  
+    10.69.1.10     freeipa.ds.as213801.net
 
-  10.69.1.10      freeipa.ds.as213801.net
-  10.69.1.210     talos-control-1
-  10.69.1.211     talos-agent-1
-  10.69.1.212     talos-control-2
-  10.69.1.213     talos-agent-2
-  10.69.1.214     talos-control-3
-  10.69.1.215     talos-agent-3 
+    10.69.1.210    kube.clusterfuck.local
+    10.69.1.212    kube.clusterfuck.local
+
+
+    10.69.1.10      freeipa.ds.as213801.net
+    10.69.1.210     talos-control-1
+    10.69.1.211     talos-agent-1
+    10.69.1.212     talos-control-2
+    10.69.1.213     talos-agent-2
+    10.69.1.214     talos-control-3
+    10.69.1.215     talos-agent-3 
   '';
   # 10.69.1.214    kube.clusterfuck.local
   # '';
@@ -887,19 +970,19 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
 
   environment.sessionVariables = rec {
     MOZ_ENABLE_WAYLAND = "1";
-    XDG_MENU_PREFIX    = "lxqt-";
-    XDG_CACHE_HOME     = "$HOME/.cache";
-    XDG_CONFIG_HOME    = "$HOME/.config";
-    XDG_DATA_HOME      = "$HOME/.local/share";
-    XDG_STATE_HOME     = "$HOME/.local/state";
+    XDG_MENU_PREFIX = "lxqt-";
+    XDG_CACHE_HOME = "$HOME/.cache";
+    XDG_CONFIG_HOME = "$HOME/.config";
+    XDG_DATA_HOME = "$HOME/.local/share";
+    XDG_STATE_HOME = "$HOME/.local/state";
 
     # Not officially in the specification
-    NIXOS_OZONE_WL     = "1";
-    XDG_BIN_HOME       = "$HOME/.local/bin";
+    NIXOS_OZONE_WL = "1";
+    XDG_BIN_HOME = "$HOME/.local/bin";
     PATH = [
       "${XDG_BIN_HOME}"
     ];
-    EDITOR             = "nvim";
+    EDITOR = "nvim";
   };
 
   environment.pathsToLink = [ "/libexec" ];
@@ -911,14 +994,18 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
     #  mode = "0755";
     #};
 
-    "/xdg/menus/plasma-applications.menu".text = builtins.readFile "${pkgs.kdePackages.plasma-workspace}/etc/xdg/menus/plasma-applications.menu";
-  
+    "/xdg/menus/plasma-applications.menu".text =
+      builtins.readFile "${pkgs.kdePackages.plasma-workspace}/etc/xdg/menus/plasma-applications.menu";
+
   };
 
   systemd.services.backup-service = {
     description = "Backs up /home into TrueNAS @ 10.69.1.100";
     enable = false;
-    path = [ pkgs.rsync pkgs.openssh ];
+    path = [
+      pkgs.rsync
+      pkgs.openssh
+    ];
     serviceConfig = {
       Type = "oneshot";
       ExecStart = "${pkgs.rsync}/bin/rsync -azP --delete --exclude=nathan/mnt --exclude=nathan/.cache -e \"ssh -i /home/nathan/.ssh/id_ed25519\" /home/ root@10.69.1.100:/mnt/BiggusDickus/backups/desktopBackups/home/";
@@ -939,7 +1026,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   };
 
   systemd.timers."suspend-at-night" = {
-    wantedBy = ["timers.target"];
+    wantedBy = [ "timers.target" ];
     enable = false;
     timerConfig = {
       OnCalendar = "Mon,Tue,Wed,Thurs,Fri *-*-* 00:00:00";
@@ -963,7 +1050,7 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
     description = "Handles suspend and resume for the service";
     before = [ "sleep.target" ];
     wantedBy = [ "sleep.target" ];
-#    stopWhenUnneeded = "yes";
+    #    stopWhenUnneeded = "yes";
     serviceConfig = {
       Type = "oneshot";
       ExecStart = "${pkgs.systemd}/bin/systemctl stop nvmeof-basic.service";
@@ -974,10 +1061,13 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   systemd.services.nvmeof-basic = {
 
     enable = true;
-    path = [ pkgs.nvme-cli pkgs.kmod ];
+    path = [
+      pkgs.nvme-cli
+      pkgs.kmod
+    ];
     description = "Connect NVMe over TCP";
-    after = ["network-online.target"];
-    wants = ["network-online.target"];
+    after = [ "network-online.target" ];
+    wants = [ "network-online.target" ];
 
     serviceConfig = {
       Type = "oneshot";
@@ -987,12 +1077,16 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
       RemainAfterExit = "yes";
     };
 
-    wantedBy = ["multi-user.target"];
+    wantedBy = [ "multi-user.target" ];
   };
 
   # Printing
   services.printing.enable = true;
-  services.printing.drivers = [ pkgs.brgenml1lpr pkgs.brgenml1cupswrapper pkgs.brlaser ];
+  services.printing.drivers = [
+    pkgs.brgenml1lpr
+    pkgs.brgenml1cupswrapper
+    pkgs.brlaser
+  ];
 
   # Install Steam
   programs.steam.enable = true;
@@ -1006,25 +1100,49 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   fileSystems."/home/nathan/mnt/Store4" = {
     device = "10.69.1.100:/mnt/BiggusDickus/backups/Store4-Backup";
     fsType = "nfs";
-    options = [ "defaults" "rw" "exec" "_netdev" "nofail" ];
+    options = [
+      "defaults"
+      "rw"
+      "exec"
+      "_netdev"
+      "nofail"
+    ];
   };
 
   fileSystems."/home/nathan/mnt/Store2" = {
     device = "10.69.1.100:/mnt/BiggusDickus/backups/Store2-Backup";
     fsType = "nfs";
-    options = [ "defaults" "rw" "exec" "_netdev" "nofail"];
+    options = [
+      "defaults"
+      "rw"
+      "exec"
+      "_netdev"
+      "nofail"
+    ];
   };
 
   fileSystems."/home/nathan/mnt/Media" = {
     device = "10.69.1.100:/mnt/BiggusDickus/core/Media";
     fsType = "nfs";
-    options = [ "defaults" "rw" "exec" "_netdev" "nofail"];
+    options = [
+      "defaults"
+      "rw"
+      "exec"
+      "_netdev"
+      "nofail"
+    ];
   };
 
   fileSystems."/home/nathan/mnt/nasMisc" = {
     device = "10.69.1.100:/mnt/BiggusDickus/core/SoftwareAndMisc";
     fsType = "nfs";
-    options = [ "defaults" "rw" "exec" "_netdev" "nofail"];
+    options = [
+      "defaults"
+      "rw"
+      "exec"
+      "_netdev"
+      "nofail"
+    ];
   };
 
   #fileSystems."/home/nathan/mnt/NixStorage" = {
@@ -1036,21 +1154,31 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
   fileSystems."/home/nathan/mnt/slimjim" = {
     device = "10.69.1.26:/Temp-Pool/";
     fsType = "nfs";
-    options = [ "defaults" "rw" "exec" "_netdev" "nofail"];
+    options = [
+      "defaults"
+      "rw"
+      "exec"
+      "_netdev"
+      "nofail"
+    ];
   };
 
   fileSystems."/home/nathan/mnt/bigSSD" = {
     device = "/dev/disk/by-id/ata-WDC_WDS200T2B0A-00SM50_21412B800613-part3";
     fsType = "ntfs";
-    options = [ "uid=1000" "gid=100" "umask=0022" ];
+    options = [
+      "uid=1000"
+      "gid=100"
+      "umask=0022"
+    ];
   };
 
-#  fileSystems."/home/nathan/mnt/extra" = {
-#    device = "/dev/nvme1n1p2";
-#    fsType = "btrfs";
-#    options = [ "defaults" "rw" "exec" ];
-#  };
-  
+  #  fileSystems."/home/nathan/mnt/extra" = {
+  #    device = "/dev/nvme1n1p2";
+  #    fsType = "btrfs";
+  #    options = [ "defaults" "rw" "exec" ];
+  #  };
+
   # iscsi stuff
   services.openiscsi.enable = false;
   services.openiscsi.discoverPortal = "10.69.1.100:3260";
@@ -1060,21 +1188,23 @@ SUBSYSTEM=="memory", ACTION=="add", TEST=="state", ATTR{state}=="offline", ATTR{
 
   '';
 
-  fonts.packages = with pkgs; [
-    noto-fonts
-    noto-fonts-cjk-sans
-    noto-fonts-color-emoji
-    liberation_ttf
-    fira-code
-    fira-code-symbols
-    mplus-outline-fonts.githubRelease
-    dina-font
-    proggyfonts
-  ] ++ builtins.filter lib.attrsets.isDerivation (builtins.attrValues pkgs.nerd-fonts);
+  fonts.packages =
+    with pkgs;
+    [
+      noto-fonts
+      noto-fonts-cjk-sans
+      noto-fonts-color-emoji
+      liberation_ttf
+      fira-code
+      fira-code-symbols
+      mplus-outline-fonts.githubRelease
+      dina-font
+      proggyfonts
+    ]
+    ++ builtins.filter lib.attrsets.isDerivation (builtins.attrValues pkgs.nerd-fonts);
 
   # Flakes
 
-  
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
   # on your system were taken. It‘s perfectly fine and recommended to leave
