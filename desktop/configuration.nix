@@ -171,7 +171,7 @@
   };
 
   networking = {
-    nameservers = [ "10.69.1.2" ]; # "2602:f766:b:4000::1" ];
+    nameservers = [ "1.1.1.1" ]; # "10.69.1.2" ]; # "2602:f766:b:4000::1" ];
     defaultGateway = "10.69.1.1";
     iproute2.rttablesExtraConfig = ''
       200 44net
@@ -231,32 +231,31 @@
             prefixLength = 27;
           }
         ];
-        routes = [
-          {
-            address = "0.0.0.0";
-            prefixLength = 0;
-            via = "44.30.111.3";
-            options = {
-              mtu = "1360";
-              src = "44.30.111.30";
-              preference = "255";
-            };
-          }
-        ];
+        #       routes = [
+        #         {
+        #           address = "0.0.0.0";
+        #           prefixLength = 0;
+        #           via = "44.30.111.3";
+        #           options = {
+        #             mtu = "1360";
+        #             src = "44.30.111.30";
+        #             preference = "255";
+        #           };
+        #         }
+        #       ];
       };
       ether0.useDHCP = false;
       ether2.wakeOnLan.enable = true;
-      ether2.useDHCP = false;
+      ether2.useDHCP = true;
       "44net".useDHCP = false;
-      #      eth0.ipv4.addresses = [{
-      #        address = "10.69.1.90";
-      #	    prefixLength = 24;
-      #      }];
-      #      eth0.ipv6.addresses = [{
-      #        address = "2602:f766:b:4000::90";
-      #	 prefixLength = 50;
-      #      }];
     };
+  };
+
+  services.bird = {
+    config = [ (builtins.readFile ./bird.config) ];
+    enable = true;
+    autoReload = true;
+
   };
 
   # Set your time zone.
@@ -459,6 +458,8 @@
     ];
 
     packages = with pkgs; [
+      bird3
+
       chirp
       #gnuradio
       gqrx
@@ -474,6 +475,9 @@
 
       nil
       harper
+      emmylua-ls
+      golangci-lint
+      vtsls
 
       cyme
       fd
@@ -493,6 +497,7 @@
       bat
       zsh
       oh-my-posh
+      powershell
 
       nvme-cli
       fio
@@ -787,7 +792,6 @@
       # codecs and video stuff
       ffmpeg
       gst_all_1.gstreamer
-      gst_all_1.gst-vaapi
       gst_all_1.gst-plugins-ugly
       gst_all_1.gst-plugins-good
       gst_all_1.gst-plugins-bad
