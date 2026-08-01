@@ -2,17 +2,25 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, ... }:
+{ config, inputs, pkgs, pkgsUnstable, ... }:
 
 {
+
+  _module.args.pkgsUnstable = import inputs.nixpkgs {
+    inherit (pkgs.stdenv.hostPlatform) system;
+    inherit (config.nixpkgs) config;
+  };
+
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
+      ./overlays.nix
     ];
 
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
+  boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
@@ -50,8 +58,25 @@
 
   # Enable the KDE Plasma Desktop Environment.
   services.displayManager.sddm.enable = true;
-  services.desktopManager.plasma6.enable = true;
+  
+  services.desktopManager = {
+    plasma6.enable = true;
+  };
 
+  programs.hyprland.enable = true;
+  programs.hyprland.withUWSM = true;
+  programs.waybar.enable = true;
+# programs.uwsm = {
+#   enable = true;
+#   waylandCompositors = {
+#     hyprland = {
+#       prettyName = "Hyprland";
+#       comment = "Hyprland compositor managed by UWSM";
+#       binPath = "/run/current-system/sw/bin/Hyprland";
+#     };
+
+#   };
+# };
   # Configure keymap in X11
   services.xserver.xkb = {
     layout = "us";
@@ -83,7 +108,6 @@
     };
   };
   # Enable sound with pipewire.
-  hardware.pulseaudio.enable = false;
   security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
@@ -112,13 +136,20 @@
     source = "${pkgs.nfs-utils.out}/bin/mount.nfs";
   };
  
+  programs.virt-manager.enable = true;
   virtualisation.libvirtd.enable = true;
+  virtualisation.docker.enable = true;
   
   virtualisation.spiceUSBRedirection.enable = true;
 
   programs.wireshark.enable = true;
   programs.wireshark.usbmon.enable = true;
   programs.gphoto2.enable = true;
+  
+  programs.zsh = {
+    enable = true;
+    autosuggestions.enable = true;
+  };
 
   programs.nh = {
     enable = true;
@@ -129,24 +160,39 @@
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.nathan = {
+    shell = pkgs.zsh;
     isNormalUser = true;
     description = "Nate";
-    extraGroups = [ "networkmanager" "wheel" "docker" "adbusers" "wireshark" "camera" ];
+    extraGroups = [ "networkmanager" "wheel" "docker" "adbusers" "wireshark" "camera" "docker" "libvirtd" "dialout" ];
     packages = with pkgs; [
       go
+      mpv
+      qdmr
+
+      remmina
+
+      darktable
+
+      wireshark
+
+      docker
 
       nodejs_24
       jq
 
       vesktop
       kdePackages.kate
-    #  thunderbird
+      
+      rofi
+      dunst
+      
+      # thunderbird
       fastfetch
       virt-viewer
       btop
       nomacs
       kitty
-      wineWowPackages.stable
+      wineWow64Packages.stable
       winbox4
       usbtop
 
@@ -158,20 +204,38 @@
       clang
       gdb
 
+      virtiofsd
+
       libreoffice-qt6-fresh
 
       dig
+      eza
+      bat
+      fzf
+      zsh
+      oh-my-posh
+
+      zoxide
 
       git
+
+      chirp
+
+      signal-desktop
 
       k9s
       kubectl
       talosctl
-    ];
+      
+      hyprshot
+      hyprpaper
+    ] ++ [ pkgsUnstable.antigravity-fhs ];
   };
 
   # Install firefox.
   programs.firefox.enable = true;
+
+  services.ollama.enable = true;
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
@@ -183,6 +247,7 @@
     wget
     aria2
     neovim
+    proxmox-backup-client
 
     btrfs-progs
     nfs-utils
@@ -198,6 +263,61 @@
 
     kdiskmark 
   ];
+
+  systemd.user.services.proxmox-backup = {
+    description = "Proxmox Backup Client — home directory";
+    # Make sure we have network before attempting the backup
+    wants = [ "network-online.target" ];
+    after = [ "network-online.target" ];
+
+    serviceConfig = {
+      Type = "oneshot";
+      User = "nathan";
+      Group = "users";
+      Nice = 10;
+      IOSchedulingClass = "best-effort";
+      IOSchedulingPriority = 7;
+    };
+
+    environment = {
+      # Set these as appropriate for your setup:
+      PBS_REPOSITORY = "nate@pbs!auto-backup@10.69.1.22:HDD-Raid";
+      PBS_PASSWORD = "3623b44a-2d9b-4d64-bd67-1dd5bc633877";
+      PBS_FINGERPRINT = "a9:2b:c5:28:57:6d:34:74:f0:e6:f6:e4:7e:2d:25:88:24:6c:b8:d5:00:32:e3:b4:b9:32:3c:02:ff:6c:3f:9f";
+    };
+
+    # If you prefer to keep secrets out of the Nix store, point to a
+    # root-readable file (mode 600) instead of using `environment` above:
+    # serviceConfig.EnvironmentFile = "/etc/proxmox-backup/env";
+
+    path = with pkgs; [
+      proxmox-backup-client
+      util-linux  # for `logger`, used in the postStart line below
+    ];
+
+    script = ''
+      ${pkgs.proxmox-backup-client}/bin/proxmox-backup-client \
+        backup home.pxar:/home/nathan \
+    '';
+
+    # Optional: log completion to syslog/journal
+    postStart = ''
+      ${pkgs.util-linux}/bin/logger -t proxmox-backup \
+        "Backup completed with status $?"
+    '';
+  };
+
+  systemd.user.timers.proxmox-backup = {
+    description = "Run Proxmox backup every few days of activity";
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      # Monotonic timer: counts time since the service last became inactive.
+      # Pauses while the laptop is suspended, so it measures "awake time".
+      OnUnitInactiveSec = "3d";
+      Persistent = true;
+      AccuracySec = "1h";
+    };
+  };
 
   fonts.packages = with pkgs; [
     noto-fonts
