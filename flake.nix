@@ -3,7 +3,8 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-25.11";
+    nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-26.05";
+    nixpkgs-master.url = "github:NixOS/nixpkgs/master";
     quickshell.url = "github:quickshell-mirror/quickshell";
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
     #   sops-nix.url = "github:Mic92/sops-nix";
@@ -33,7 +34,6 @@
         specialArgs = { inherit inputs; };
         modules = [
           ./desktop/configuration.nix
-
           #./common/common.nix
 
         ];
