@@ -64,6 +64,7 @@
   };
 
   programs.hyprland.enable = true;
+  programs.sway.enable = true;
   programs.hyprland.withUWSM = true;
   programs.waybar.enable = true;
 # programs.uwsm = {
@@ -169,6 +170,14 @@
       mpv
       qdmr
 
+      jetbrains.idea
+
+      javaPackages.compiler.temurin-bin.jre-25
+      javaPackages.compiler.temurin-bin.jre-21
+      javaPackages.compiler.temurin-bin.jre-17
+      javaPackages.compiler.temurin-bin.jre-11
+      javaPackages.compiler.temurin-bin.jre-8
+
       remmina
 
       darktable
@@ -207,6 +216,10 @@
       virtiofsd
 
       libreoffice-qt6-fresh
+
+      grim
+      slurp
+      wl-clipboard
 
       dig
       eza
