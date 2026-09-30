@@ -88,7 +88,7 @@
   #zramSwap.writebackDevice = "/dev/nvme1n1p3";
 
   # Additional Kernel Modules
-  #boot.extraModulePackages = with config.boot.kernelPackages; [ usbip ];
+  boot.extraModulePackages = with config.boot.kernelPackages; [ v4l2loopback ];
 
   boot.initrd.kernelModules = [
     "amdgpu"
@@ -98,7 +98,7 @@
   #boot.supportedFilesystems = [ "zfs" ];
 
   # -- Auto Loading -- #
-  #boot.kernelModules = [  ];
+  boot.kernelModules = [ "v4l2loopback" ];
 
   security.krb5 = {
     enable = false;
@@ -147,6 +147,7 @@
   };
 
   networking.hostName = "nixos"; # Define your hostname.
+  networking.domain = "ds.as213801.net";
   networking.networkmanager.enable = false;
   #boot.initrd.systemd.network.wait-online.enable = true;
   #systemd.network.wait-online.enable = true;
@@ -171,8 +172,8 @@
   };
 
   networking = {
-    nameservers = [ "1.1.1.1" ]; # "10.69.1.2" ]; # "2602:f766:b:4000::1" ];
-    defaultGateway = "10.69.1.1";
+    nameservers = [ "10.69.1.2" ]; # "10.69.1.2" ]; # "2602:f766:b:4000::1" ];
+    #defaultGateway = "10.69.1.1";
     iproute2.rttablesExtraConfig = ''
       200 44net
     '';
@@ -182,13 +183,29 @@
     resolvconf.extraOptions = [
       #"options no-aaaa"
     ];
+    bridges = {
+      microvm = { };
+    };
+    nat = {
+      enable = true;
+      # NAT66 exists and works. But if you have a proper subnet in
+      # 2000::/3 you should route that and remove this setting:
+      enableIPv6 = true;
+
+      # Change this to the interface with upstream Internet access
+      externalInterface = "ether3";
+      # The bridge where you want to provide Internet access
+      internalInterfaces = [ "microvm" ];
+      internalIPs = [ "10.69.254.0/24" ];
+    };
+
     vlans = {
       #vlan150 = { id=150; interface="eth0"; };
 
-      vlan100 = {
-        id = 100;
-        interface = "ether0";
-      };
+      #vlan100 = {
+      #  id = 100;
+      #  interface = "ether0";
+      #};
       vlan44 = {
         id = 44;
         interface = "ether0";
@@ -200,15 +217,15 @@
     };
     interfaces = {
       #vlan150.ipv6.addresses = [{
-      #address = "2602:f766:b:3::90";
-      #prefixLength = 64;
+      #  address = "2602:f766:b:3::90";
+      #  prefixLength = 64;
       #}];
-      vlan100.ipv4.addresses = [
-        {
-          address = "192.168.0.220";
-          prefixLength = 24;
-        }
-      ];
+      #vlan100.ipv4.addresses = [
+      #  {
+      #    address = "192.168.0.220";
+      #    prefixLength = 24;
+      #  }
+      #];
       vlan10.ipv4 = {
         addresses = [
           {
@@ -216,13 +233,22 @@
             prefixLength = 24;
           }
         ];
-        routes = [
+        #routes = [
+        #  {
+        #    address = "0.0.0.0";
+        #    prefixLength = 0;
+        #    via = "10.69.1.1";
+        #  }
+        #];
+      };
+      ether3 = {
+        ipv4.addresses = [
           {
-            address = "0.0.0.0";
-            prefixLength = 0;
-            via = "10.69.1.1";
+            address = "10.69.21.90";
+            prefixLength = 24;
           }
         ];
+        useDHCP = false;
       };
       vlan44.ipv4 = {
         addresses = [
@@ -252,7 +278,7 @@
   };
 
   services.bird = {
-    config = [ (builtins.readFile ./bird.config) ];
+    config = (builtins.readFile ./bird.conf);
     enable = true;
     autoReload = true;
 
@@ -362,7 +388,7 @@
           "channelmix.upmix" = true;
           "channelmix.upmix-method" = "psd"; # none, simple
           "channelmix.mix-lfe" = true;
-          "channelmix.lfe-cutoff" = 0;
+          "channelmix.lfe-cutoff" = 150;
           "channelmix.fc-cutoff" = 12000;
           "channelmix.rear-delay" = 5.8;
         };
@@ -373,9 +399,14 @@
   programs.noisetorch.enable = true;
   programs.zsh.enable = true;
   programs.fish.enable = true;
-  programs.nh.enable = true;
-  programs.nh.flake = "/home/nathan/nix";
+
+  programs.nh = {
+    enable = true;
+    flake = "/home/nathan/nix";
+  };
+
   programs.chromium.enable = true;
+  programs.ydotool.enable = true;
 
   programs.uwsm = {
     enable = true;
@@ -395,9 +426,10 @@
   };
 
   programs.qdmr.enable = true;
-  services.sdrplayApi.enable = true;
+  services.sdrplayApi.enable = false;
   programs.envision = {
-    enable = true;
+    enable = false;
+
     openFirewall = true; # This is set true by default
   };
   #android_sdk.accept_license = true;
@@ -460,13 +492,17 @@
     packages = with pkgs; [
       bird3
 
+      pv
+      nixfmt
+
       chirp
       #gnuradio
       gqrx
-      sdrplay
-      soapysdr
-      soapysdrplay
-      soapysdr-with-plugins
+      #sdrplay
+      #soapysdr
+      #soapysdrplay
+      #soapysdr-with-plugins
+      imgbrd-grabber
 
       supercell-wx
 
@@ -486,7 +522,6 @@
       tectonic-unwrapped
       mermaid-cli
 
-      gemini-cli-bin
       audacity
 
       ripgrep
@@ -506,7 +541,8 @@
       arduino-ide
 
       vscode-fhs
-      antigravity
+      antigravity-ide
+      antigravity-cli
 
       mprocs
 
@@ -605,7 +641,6 @@
       virt-viewer
       blender
       wireguard-tools
-      obs-studio
       wf-recorder
       darktable
       zoom-us
@@ -661,6 +696,11 @@
     capSysAdmin = true;
   };
 
+  programs.obs-studio = {
+    enable = true;
+    enableVirtualCamera = true;
+  };
+
   # File Manager Stuff
   services.samba = {
     enable = false;
@@ -670,6 +710,10 @@
   services.gvfs.enable = true;
   services.udisks2.enable = true;
   services.devmon.enable = true;
+
+  # Prometheus
+  services.prometheus.exporters.node.enable = true;
+  services.prometheus.exporters.bird.enable = true;
 
   services.tailscale.enable = true;
 
@@ -755,6 +799,7 @@
       kdePackages.qtmultimedia
       kdePackages.phonon
       kdePackages.kdeconnect-kde
+      kdePackages.kpeople
       kdePackages.plasma-browser-integration
       #kdePackages.xdg-desktop-portal-kde
       kdePackages.plasma-workspace
@@ -964,7 +1009,11 @@
     enable = true;
     wlr.enable = true;
     extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
-    config.common.default = "wlr";
+    config.common = {
+      default = "gtk";
+      "org.freedesktop.impl.portal.ScreenCast" = "wlr";
+      "org.freedesktop.impl.portal.Screenshot" = "wlr";
+    };
   };
 
   # Environment Variables
@@ -1048,41 +1097,41 @@
     };
   };
 
-  systemd.services.nvmeof-basic-manager = {
-    enable = true;
-    path = [ pkgs.systemd ];
-    description = "Handles suspend and resume for the service";
-    before = [ "sleep.target" ];
-    wantedBy = [ "sleep.target" ];
-    #    stopWhenUnneeded = "yes";
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = "${pkgs.systemd}/bin/systemctl stop nvmeof-basic.service";
-      ExecStop = "${pkgs.systemd}/bin/systemctl start nvmeof-basic.service";
-    };
-  };
+  #systemd.services.nvmeof-basic-manager = {
+  #  enable = true;
+  #  path = [ pkgs.systemd ];
+  #  description = "Handles suspend and resume for the service";
+  #  before = [ "sleep.target" ];
+  #  wantedBy = [ "sleep.target" ];
+  #  #    stopWhenUnneeded = "yes";
+  #  serviceConfig = {
+  #    Type = "oneshot";
+  #    ExecStart = "${pkgs.systemd}/bin/systemctl stop nvmeof-basic.service";
+  #    ExecStop = "${pkgs.systemd}/bin/systemctl start nvmeof-basic.service";
+  #  };
+  #};
 
-  systemd.services.nvmeof-basic = {
-
-    enable = true;
-    path = [
-      pkgs.nvme-cli
-      pkgs.kmod
-    ];
-    description = "Connect NVMe over TCP";
-    after = [ "network-online.target" ];
-    wants = [ "network-online.target" ];
-
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStartPre = "${pkgs.kmod}/bin/modprobe nvme-tcp";
-      ExecStart = "${pkgs.nvme-cli}/bin/nvme connect -t tcp -a 10.69.1.100 -s 4420 -n nqn.2011-06.com.truenas:uuid:96e5fce2-d94d-44a3-8337-5c19661f1caa:desktop";
-      ExecStop = "${pkgs.nvme-cli}/bin/nvme disconnect -n nqn.2011-06.com.truenas:uuid:96e5fce2-d94d-44a3-8337-5c19661f1caa:desktop";
-      RemainAfterExit = "yes";
-    };
-
-    wantedBy = [ "multi-user.target" ];
-  };
+  #systemd.services.nvmeof-basic = {
+  #
+  #  enable = true;
+  #  path = [
+  #    pkgs.nvme-cli
+  #    pkgs.kmod
+  #  ];
+  #  description = "Connect NVMe over TCP";
+  #  after = [ "network-online.target" ];
+  #  wants = [ "network-online.target" ];
+  #
+  #  serviceConfig = {
+  #    Type = "oneshot";
+  #    ExecStartPre = "${pkgs.kmod}/bin/modprobe nvme-tcp";
+  #    ExecStart = "${pkgs.nvme-cli}/bin/nvme connect -t tcp -a 10.69.1.100 -s 4420 -n nqn.2011-06.com.truenas:uuid:96e5fce2-d94d-44a3-8337-5c19661f1caa:desktop";
+  #    ExecStop = "${pkgs.nvme-cli}/bin/nvme disconnect -n nqn.2011-06.com.truenas:uuid:96e5fce2-d94d-44a3-8337-5c19661f1caa:desktop";
+  #    RemainAfterExit = "yes";
+  #  };
+  #
+  #  wantedBy = [ "multi-user.target" ];
+  #};
 
   # Printing
   services.printing.enable = true;
