@@ -242,7 +242,8 @@
       
       hyprshot
       hyprpaper
-    ] ++ [ pkgsUnstable.antigravity-fhs ];
+    ]; 
+    #++ [ pkgsUnstable.antigravity-ide-fhs ];
   };
 
   # Install firefox.
@@ -278,7 +279,8 @@
   ];
 
   systemd.user.services.proxmox-backup = {
-    description = "Proxmox Backup Client — home directory";
+    enable = true;
+    description = "Proxmox Backup Client - home directory";
     # Make sure we have network before attempting the backup
     wants = [ "network-online.target" ];
     after = [ "network-online.target" ];
@@ -294,7 +296,7 @@
 
     environment = {
       # Set these as appropriate for your setup:
-      PBS_REPOSITORY = "nate@pbs!auto-backup@10.69.1.22:HDD-Raid";
+      PBS_REPOSITORY = "nate@pbs!auto-backup@10.69.1.100:HDD-Raid";
       PBS_PASSWORD = "3623b44a-2d9b-4d64-bd67-1dd5bc633877";
       PBS_FINGERPRINT = "a9:2b:c5:28:57:6d:34:74:f0:e6:f6:e4:7e:2d:25:88:24:6c:b8:d5:00:32:e3:b4:b9:32:3c:02:ff:6c:3f:9f";
     };
@@ -321,6 +323,7 @@
   };
 
   systemd.user.timers.proxmox-backup = {
+    enable = true;
     description = "Run Proxmox backup every few days of activity";
     wantedBy = [ "timers.target" ];
     timerConfig = {
