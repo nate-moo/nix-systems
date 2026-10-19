@@ -235,6 +235,8 @@
       chirp
 
       signal-desktop
+      prismlauncher
+
 
       k9s
       kubectl
@@ -278,6 +280,22 @@
     kdiskmark 
   ];
 
+  environment.etc = {
+    "/xdg/menus/plasma-applications.menu".text = builtins.readFile "${pkgs.kdePackages.plasma-workspace}/etc/xdg/menus/plasma-applications.menu";
+  };
+
+  xdg.portal = {
+    enable = true;
+    wlr.enable = true;
+    extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+    config.common = {
+      default = "gtk";
+      "org.freedesktop.impl.portal.ScreenCast" = "wlr";
+      "org.freedesktop.impl.portal.Screenshot" = "wlr";
+    };
+  };
+
+
   systemd.user.services.proxmox-backup = {
     enable = true;
     description = "Proxmox Backup Client - home directory";
@@ -301,9 +319,6 @@
       PBS_FINGERPRINT = "a9:2b:c5:28:57:6d:34:74:f0:e6:f6:e4:7e:2d:25:88:24:6c:b8:d5:00:32:e3:b4:b9:32:3c:02:ff:6c:3f:9f";
     };
 
-    # If you prefer to keep secrets out of the Nix store, point to a
-    # root-readable file (mode 600) instead of using `environment` above:
-    # serviceConfig.EnvironmentFile = "/etc/proxmox-backup/env";
 
     path = with pkgs; [
       proxmox-backup-client
