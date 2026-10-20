@@ -10,6 +10,7 @@
 
   boot.initrd.availableKernelModules = [ "xhci_pci" "thunderbolt" "vmd" "nvme" "uas" "sd_mod" "rtsx_pci_sdmmc" ];
   boot.initrd.kernelModules = [ ];
+  boot.initrd.luks.devices."cryptroot".device = "/dev/disk/by-uuid/c6aabb1b-b706-41ac-8149-6239101a6fe5";
   boot.kernelModules = [ "kvm-intel" ];
   boot.extraModulePackages = [ ];
 
