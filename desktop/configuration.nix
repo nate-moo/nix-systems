@@ -183,6 +183,12 @@
     resolvconf.extraOptions = [
       #"options no-aaaa"
     ];
+    localCommands = ''
+      # ip rule add from 44.30.111.0/27 lookup 200
+      # ip rule add to 44.30.111.0/27 lookup 200
+      # ip route add 44.30.111.0/27 dev vlan44 table 200
+      # ip route add default via 44.30.111.3 dev vlan44 table 200
+    '';
     bridges = {
       microvm = { };
     };
@@ -257,18 +263,30 @@
             prefixLength = 27;
           }
         ];
-        #       routes = [
-        #         {
-        #           address = "0.0.0.0";
-        #           prefixLength = 0;
-        #           via = "44.30.111.3";
-        #           options = {
-        #             mtu = "1360";
-        #             src = "44.30.111.30";
-        #             preference = "255";
-        #           };
-        #         }
-        #       ];
+        routes = [
+          #         {
+          #           address = "0.0.0.0";
+          #           prefixLength = 0;
+          #           via = "44.30.111.3";
+          #           options = {
+          #             mtu = "1360";
+          #             src = "44.30.111.30";
+          #             table = "200";
+          #             #preference = "255";
+          #           };
+          #         }
+          #         {
+          #           address = "44.30.111.0";
+          #           prefixLength = 27;
+          #           via = "vlan44";
+          #           options = {
+          #             mtu = "1360";
+          #             src = "44.30.111.30";
+          #             table = "200";
+          #             #preference = "255";
+          #           };
+          #         }
+        ];
       };
       ether0.useDHCP = false;
       ether2.wakeOnLan.enable = true;
@@ -332,12 +350,14 @@
 
   # Start ISCSI stuff on login
   systemd.user.services.iscsi-init = {
+    enable = false;
     description = "initiates iscsi";
     script = "/home/nathan/.local/bin/iscsi-init ";
     wantedBy = [ "multi-user.target" ]; # starts after login
   };
 
   systemd.user.services.fix-screen = {
+    enable = false;
     description = "Fixes vertical monitor wonkyness";
     script = "/home/nathan/.local/bin/fix-screen ";
     wantedBy = [ "multi-user.target" ];
@@ -787,12 +807,12 @@
       # Wayland Screenshot
       grim
       slurp
+      wayfreeze
 
       # c/cpp deps
-      gemini-cli-bin
       gcc
       gnumake
-
+      #
       # libsForQt5
       kdePackages.kio-extras
       # libsForQt5.libqtav -- Removed
@@ -905,63 +925,59 @@
 
   # Nginx
   services.nginx.enable = true;
-  services.nginx.virtualHosts = {
-    "jellyfin-lab.naed3r.xyz" = {
-      addSSL = true;
-      serverAliases = [
-        "jellyfin"
-      ];
-      #forceSSL = true;
-      sslCertificate = "/etc/ssl/certs/jellyfin-self.crt";
-      sslCertificateKey = "/etc/ssl/certs/jellyfin-self.key";
-      locations."/" = {
-        proxyPass = "http://10.69.1.223:8096";
-        proxyWebsockets = true;
+  services.nginx.virtualHosts =
+    let
+      scrt = "/etc/ssl/certs/jellyfin-self.crt";
+      skey = "/etc/ssl/certs/jellyfin-self.key";
+      common = {
+        addSSL = true;
+        #forceSSL = true;
+        sslCertificate = scrt;
+        sslCertificateKey = skey;
       };
-    };
+    in
+    {
+      "jellyfin-lab.naed3r.xyz" = common // {
+        serverAliases = [
+          "jellyfin"
+        ];
+        locations."/" = {
+          proxyPass = "http://10.69.1.223:8096";
+          proxyWebsockets = true;
+        };
+      };
 
-    #services.nginx.virtualHosts.
-    "truenas.naed3r.xyz" = {
-      addSSL = true;
-      sslCertificate = "/etc/ssl/certs/jellyfin-self.crt";
-      sslCertificateKey = "/etc/ssl/certs/jellyfin-self.key";
-      serverAliases = [
-        "truenas"
-      ];
-      locations."/" = {
-        proxyPass = "https://10.69.1.100";
-        proxyWebsockets = true;
+      #services.nginx.virtualHosts.
+      "truenas.naed3r.xyz" = common // {
+        serverAliases = [
+          "truenas"
+        ];
+        locations."/" = {
+          proxyPass = "https://10.69.1.100";
+          proxyWebsockets = true;
+        };
       };
-    };
 
-    "immich.naed3r.xyz" = {
-      addSSL = true;
-      serverAliases = [
-        "immich"
-      ];
-      #forceSSL = true;
-      sslCertificate = "/etc/ssl/certs/jellyfin-self.crt";
-      sslCertificateKey = "/etc/ssl/certs/jellyfin-self.key";
-      locations."/" = {
-        proxyPass = "http://10.69.1.205:2283";
-        proxyWebsockets = true;
+      "immich.naed3r.xyz" = common // {
+        serverAliases = [
+          "immich"
+        ];
+        locations."/" = {
+          proxyPass = "http://10.69.1.205:2283";
+          proxyWebsockets = true;
+        };
       };
-    };
 
-    "nextcloud.naed3r.xyz" = {
-      addSSL = true;
-      serverAliases = [
-        "nextcloud"
-      ];
-      #forceSSL = true;
-      sslCertificate = "/etc/ssl/certs/jellyfin-self.crt";
-      sslCertificateKey = "/etc/ssl/certs/jellyfin-self.key";
-      locations."/" = {
-        proxyPass = "https://10.69.1.221";
-        proxyWebsockets = true;
+      "nextcloud.naed3r.xyz" = common // {
+        serverAliases = [
+          "nextcloud"
+        ];
+        locations."/" = {
+          proxyPass = "https://10.69.1.221";
+          proxyWebsockets = true;
+        };
       };
     };
-  };
 
   networking.extraHosts = ''
     127.0.0.1      jellyfin-lab.naed3r.xyz
@@ -1051,6 +1067,27 @@
       builtins.readFile "${pkgs.kdePackages.plasma-workspace}/etc/xdg/menus/plasma-applications.menu";
 
   };
+
+  systemd.services.setup44 =
+    let
+      startupScript =
+        with pkgs;
+        writeScript "startup44net" ''
+          #! ${bash}/bin/bash
+          ${iproute2}/bin/ip rule add from 44.30.111.0/27 lookup 200
+          ${iproute2}/bin/ip rule add to 44.30.111.0/27 lookup 200
+          ${iproute2}/bin/ip route add 44.30.111.0/27 dev vlan44 table 200
+          ${iproute2}/bin/ip route add default via 44.30.111.3 dev vlan44 table 200
+          exit 0
+        '';
+    in
+    {
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = startupScript;
+      };
+      wantedBy = [ "multi-user.target" ];
+    };
 
   systemd.services.backup-service = {
     description = "Backs up /home into TrueNAS @ 10.69.1.100";
