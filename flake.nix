@@ -56,7 +56,7 @@
           })
 
           # Secureboot
-	  lanzaboote.nixosModules.lanzaboote
+          lanzaboote.nixosModules.lanzaboote
 
           ({ pkgs, lib, ... }: {
 
@@ -70,20 +70,20 @@
             # generated at installation time. So we force it to false
             # for now.
             boot.loader.systemd-boot.enable = lib.mkForce false;
-	    boot.initrd.systemd.enable = true;
+            boot.initrd.systemd.enable = true;
             boot.lanzaboote = {
               enable = true;
               pkiBundle = "/var/lib/sbctl";
-	      configurationLimit = 8;
-	      measuredBoot = {
-	        enable = true;
-	        pcrs = [
-	          0
-		  1
-	          4
-	          7
-	        ];
-	      };
+              configurationLimit = 8;
+              measuredBoot = {
+                enable = true;
+                pcrs = [
+                  0
+                  1
+                  4
+                  7
+                ];
+              };
             };
           })
 
@@ -128,6 +128,16 @@
           nixos-hardware.nixosModules.common-hidpi
           nixos-hardware.nixosModules.common-pc-laptop-ssd
           nixos-hardware.nixosModules.common-pc-laptop
+
+        ];
+      };
+
+      nixosConfigurations.neptune = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = { inherit inputs; };
+        modules = [
+          ./neptune/configuration.nix
+          # ./common/common.nix
 
         ];
       };
