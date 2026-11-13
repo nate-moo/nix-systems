@@ -19,8 +19,6 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  networking.hostName = "neptune"; # Define your hostname.
-
   systemd.network.links = {
     "10-eth0" = {
       matchConfig.MACAddress = "2:8:20:3d:c1:3c";
@@ -28,22 +26,41 @@
     };
   };
 
-  networking.interfaces.ether0 = {
-    ether0 = {
-      ipv4.addresses = [
-        {
-          address = "10.69.1.62";
-          prefixLength = 24;
-        }
-      ];
+  networking = {
+    nameservers = [ "10.69.1.2" ];
+    hostName = "neptune"; # Define your hostname.
+    firewall.enable = false;
+    networkmanager.enable = false;
+    interfaces = {
+      ether0 = {
+        ipv4 = {
+          addresses = [
+            {
+              address = "10.69.1.62";
+              prefixLength = 24;
+            }
+          ];
+          routes = [
+            {
+              address = "0.0.0.0";
+              prefixLength = 0;
+              via = "10.69.1.100";
+            }
+          ];
+
+        };
+      };
     };
+
   };
 
   # Configure network connections interactively with nmcli or nmtui.
-  networking.networkmanager.enable = false;
+  boot.kernelParams = [ "console=ttyS0,115200n8" ];
 
   # Set your time zone.
   time.timeZone = "America/Denver";
+
+  users.users.root.hashedPassword = "$y$j9T$6AhxErEkoz.f5QwrV0ddL1$mhfhjZN.bQztfEUY1Qh4zQJhrDmSEXUV86rBMcHNP40";
 
   # i18n.defaultLocale = "en_US.UTF-8";
   # console = {
@@ -66,18 +83,42 @@
   environment.systemPackages = with pkgs; [
     neovim
     wget
+    git
+    curl
+    bgpq4
+    bird3
+    pathvector
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   programs.mtr.enable = true;
+  programs.nh.enable = true;
+  programs.nh.flake = "/root/nix/";
+  services.openssh.enable = true;
+  services.technitium-dns-server.enable = true;
+  services.calibre-server.enable = true;
+  services.calibre-server.auth.userDb = "/var/lib/calibre/users.sqlite";
+  services.calibre-server.auth.enable = true;
+  services.calibre-web.enable = true;
+  services.calibre-web.options.enableBookUploading = true;
+
+
+  services.bird.enable = true;
+  services.bird.checkConfig = false;
+  services.bird.config = ''
+include "/var/lib/pathvector/configdir/bird.conf";
+  '';
+
+  systemd.tmpfiles.rules = [
+    "L+ /etc/bird/protocols.json - - - - /var/lib/pathvector/configdir/protocols.json"
+  ];
 
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
-  # networking.firewall.enable = false;
-
+  
   # This option defines the first version of NixOS you have installed on this particular machine,
   # and is used to maintain compatibility with application data (e.g. databases) created on older NixOS versions.
   #
