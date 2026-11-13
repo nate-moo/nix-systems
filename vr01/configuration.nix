@@ -50,13 +50,15 @@
         privateKeyFile = "/var/lib/wireguard/44net-1.key";
 
         mtu = 1360;
-        table = "off";  # Table = off
+        table = "off"; # Table = off
 
-        peers = [{
-          publicKey = "SZ8bJ07Tz/pu9Z3rR5gbGVvr0DZ70tl4oiUWwtGVP0g=";
-          presharedKeyFile = "/var/lib/wireguard/44net-1-router.psk";
-          allowedIPs = [ "0.0.0.0/0" ];
-        }];
+        peers = [
+          {
+            publicKey = "SZ8bJ07Tz/pu9Z3rR5gbGVvr0DZ70tl4oiUWwtGVP0g=";
+            presharedKeyFile = "/var/lib/wireguard/44net-1-router.psk";
+            allowedIPs = [ "0.0.0.0/0" ];
+          }
+        ];
 
         postSetup = ''
           ip route add 44.30.111.3/32 via 10.2.3.2 dev 44net.1
@@ -72,7 +74,10 @@
           {
             publicKey = "K3dyDVDrAdupNsFZYBquEuHGuWGiZl64wDQlPREf52o=";
             presharedKeyFile = "/var/lib/wireguard/44net-3.psk";
-            allowedIPs = [ "10.0.2.0/30" "44.30.111.210/32" ];
+            allowedIPs = [
+              "10.0.2.0/30"
+              "44.30.111.210/32"
+            ];
           }
         ];
       };
@@ -82,19 +87,40 @@
       ether0 = {
         ipv6 = {
           addresses = [
-          {
-            address = "2602:f9ba:69::237";
-            prefixLength = 48;
-          }
+            {
+              address = "2602:f9ba:69::237";
+              prefixLength = 48;
+            }
           ];
         };
       };
       ether1 = {
-        ipv6 = { addresses = [ { address = "2602:fa3d:f4:1::cb"; prefixLength = 64; } ]; };
-        ipv4 = { addresses = [ { address = "149.112.75.30"; prefixLength = 24; } ]; };
+        ipv6 = {
+          addresses = [
+            {
+              address = "2602:fa3d:f4:1::cb";
+              prefixLength = 64;
+            }
+          ];
+        };
+        ipv4 = {
+          addresses = [
+            {
+              address = "149.112.75.30";
+              prefixLength = 24;
+            }
+          ];
+        };
       };
       ether2 = {
-        ipv6 = { addresses = [ { address = "2602:f766:f::2"; prefixLength = 64; } ]; };
+        ipv6 = {
+          addresses = [
+            {
+              address = "2602:f766:f::2";
+              prefixLength = 64;
+            }
+          ];
+        };
         # ipv4 = { addresses = [ { address = ""; prefixLength = 24; } ]; };
       };
     };
@@ -130,7 +156,7 @@
   services.bird.enable = true;
   services.bird.checkConfig = false;
   services.bird.config = ''
-include "/var/lib/pathvector/configdir/bird.conf";
+    include "/var/lib/pathvector/configdir/bird.conf";
   '';
 
   systemd.tmpfiles.rules = [
@@ -140,6 +166,7 @@ include "/var/lib/pathvector/configdir/bird.conf";
   systemd.services.labv6gre = {
     wantedBy = [ "multi-user.target" ];
     after = [ "network-online.target" ];
+    path = with pkgs; [ iproute2 ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
@@ -150,11 +177,12 @@ include "/var/lib/pathvector/configdir/bird.conf";
       ip link set labv6gre mtu 1440 up
     '';
   };
-  
+
   systemd.services.vrtun = {
     enable = false;
     wantedBy = [ "multi-user.target" ];
     after = [ "network-online.target" ];
+    path = with pkgs; [ iproute2 ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
@@ -165,7 +193,6 @@ include "/var/lib/pathvector/configdir/bird.conf";
       ip link set labv6gre mtu 1440 up
     '';
   };
-
 
   # This option defines the first version of NixOS you have installed on this particular machine,
   # and is used to maintain compatibility with application data (e.g. databases) created on older NixOS versions.

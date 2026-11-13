@@ -141,5 +141,15 @@
 
         ];
       };
+
+      nixosConfigurations.vr01 = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = { inherit inputs; };
+        modules = [
+          ./vr01/configuration.nix
+          # ./common/common.nix
+
+        ];
+      };
     };
 }
