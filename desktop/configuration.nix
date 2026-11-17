@@ -82,8 +82,6 @@
     #   "resume_offset=48752640"
   ];
 
-  boot.resumeDevice = "/dev/disk/by-uuid/2ee11375-6999-431d-a160-32bd213dbc83";
-
   zramSwap.enable = true;
   #zramSwap.writebackDevice = "/dev/nvme1n1p3";
 
@@ -172,7 +170,10 @@
   };
 
   networking = {
-    nameservers = [ "10.69.1.2" ]; # "10.69.1.2" ]; # "2602:f766:b:4000::1" ];
+    nameservers = [
+      "10.69.1.2"
+      "10.69.1.62"
+    ]; # "10.69.1.2" ]; # "2602:f766:b:4000::1" ];
     #defaultGateway = "10.69.1.1";
     iproute2.rttablesExtraConfig = ''
       200 44net
@@ -447,11 +448,6 @@
 
   programs.qdmr.enable = true;
   services.sdrplayApi.enable = false;
-  programs.envision = {
-    enable = false;
-
-    openFirewall = true; # This is set true by default
-  };
   #android_sdk.accept_license = true;
 
   security.pam.loginLimits = [
@@ -529,6 +525,8 @@
       ast-grep
       luajitPackages.luarocks-nix
 
+      calibre
+
       nil
       harper
       emmylua-ls
@@ -588,7 +586,6 @@
 
       imagemagick
       gphoto2
-      gpu-screen-recorder-gtk
       hugin
 
       ryubing
@@ -602,7 +599,7 @@
       jetbrains.pycharm
 
       jetbrains.idea
-      zulu8
+      #zulu8
 
       jetbrains.datagrip
 
@@ -692,7 +689,7 @@
       python314
       python314Packages.pip
       python314Packages.requests
-      #python311Packages.httpx
+      python314Packages.httpx
       python314Packages.beautifulsoup4
 
       thunderbird
@@ -836,7 +833,7 @@
       hunspell
       hunspellDicts.en_US
 
-      onlyoffice-desktopeditors
+      #onlyoffice-desktopeditors
 
       # Development resources
       xhost
@@ -1134,6 +1131,46 @@
     };
   };
 
+  systemd.user.services.proxmox-backup = {
+    enable = true;
+    description = "Proxmox Backup Client - home directory";
+    # Make sure we have network before attempting the backup
+    wants = [ "network-online.target" ];
+    after = [ "network-online.target" ];
+
+    serviceConfig = {
+      Type = "oneshot";
+      User = "nathan";
+      Group = "users";
+      Nice = 10;
+      IOSchedulingClass = "best-effort";
+      IOSchedulingPriority = 7;
+    };
+
+    environment = {
+      # Set these as appropriate for your setup:
+      PBS_REPOSITORY = "root@pam!desktop@10.69.1.100:BiggusDickus";
+      PBS_PASSWORD = "6c81aff6-342e-498a-9d0d-6b63c80ac2fd";
+      PBS_FINGERPRINT = "a9:2b:c5:28:57:6d:34:74:f0:e6:f6:e4:7e:2d:25:88:24:6c:b8:d5:00:32:e3:b4:b9:32:3c:02:ff:6c:3f:9f";
+    };
+
+    path = with pkgs; [
+      proxmox-backup-client
+      util-linux # for `logger`, used in the postStart line below
+    ];
+
+    script = ''
+      ${pkgs.proxmox-backup-client}/bin/proxmox-backup-client \
+        backup home.pxar:/home/nathan var.pxar:/var \
+    '';
+
+    # Optional: log completion to syslog/journal
+    postStart = ''
+      ${pkgs.util-linux}/bin/logger -t proxmox-backup \
+        "Backup completed with status $?"
+    '';
+  };
+
   #systemd.services.nvmeof-basic-manager = {
   #  enable = true;
   #  path = [ pkgs.systemd ];
@@ -1235,39 +1272,51 @@
     ];
   };
 
+  fileSystems."/home/nathan" = {
+    device = "/dev/disk/by-uuid/675b422f-6ded-4e22-9822-5c9909fc0970";
+    fsType = "btrfs";
+    options = [ "defaults" "rw" "subvol=nathan" "compress=zstd" ];
+  };
+
   #fileSystems."/home/nathan/mnt/NixStorage" = {
   #  device = "nixstor2@4b9a71e8-7d89-4dfc-ad16-af5006db2373.NixStorage=/";
   #  fsType = "ceph";
   #  options = [ "mon_addr=10.69.1.23:6789/10.69.1.24:6789" "_netdev" "nofail"];
   #};
 
-  fileSystems."/home/nathan/mnt/slimjim" = {
-    device = "10.69.1.26:/Temp-Pool/";
-    fsType = "nfs";
+  #fileSystems."/home/nathan/mnt/slimjim" = {
+  #  device = "10.69.1.26:/Temp-Pool/";
+  #  fsType = "nfs";
+  #  options = [
+  #    "defaults"
+  #    "rw"
+  #    "exec"
+  #    "_netdev"
+  #    "nofail"
+  #  ];
+  #};
+
+  # fileSystems."/home/nathan/mnt/bigSSD" = {
+  #   device = "/dev/disk/by-id/ata-WDC_WDS200T2B0A-00SM50_21412B800613-part3";
+  #   fsType = "ntfs";
+  #   options = [
+  #     "uid=1000"
+  #     "gid=100"
+  #     "umask=0022"
+  #   ];
+  # };
+
+  fileSystems."/home/nathan/mnt/extra" = {
+    device = "/dev/disk/by-uuid/675b422f-6ded-4e22-9822-5c9909fc0970";
+    fsType = "btrfs";
     options = [
       "defaults"
       "rw"
       "exec"
-      "_netdev"
-      "nofail"
+      "compress=zstd"
+      "subvol=/data"
     ];
   };
-
-  fileSystems."/home/nathan/mnt/bigSSD" = {
-    device = "/dev/disk/by-id/ata-WDC_WDS200T2B0A-00SM50_21412B800613-part3";
-    fsType = "ntfs";
-    options = [
-      "uid=1000"
-      "gid=100"
-      "umask=0022"
-    ];
-  };
-
-  #  fileSystems."/home/nathan/mnt/extra" = {
-  #    device = "/dev/nvme1n1p2";
-  #    fsType = "btrfs";
-  #    options = [ "defaults" "rw" "exec" ];
-  #  };
 
   # iscsi stuff
   services.openiscsi.enable = false;

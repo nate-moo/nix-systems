@@ -29,7 +29,10 @@
   networking = {
     nameservers = [ "10.69.1.2" ];
     hostName = "neptune"; # Define your hostname.
+<<<<<<< Updated upstream
     firewall.enable = false;
+=======
+>>>>>>> Stashed changes
     networkmanager.enable = false;
     interfaces = {
       ether0 = {
@@ -84,10 +87,13 @@
     neovim
     wget
     git
+<<<<<<< Updated upstream
     curl
     bgpq4
     bird3
     pathvector
+=======
+>>>>>>> Stashed changes
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
