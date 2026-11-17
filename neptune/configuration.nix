@@ -29,10 +29,7 @@
   networking = {
     nameservers = [ "10.69.1.2" ];
     hostName = "neptune"; # Define your hostname.
-<<<<<<< Updated upstream
     firewall.enable = false;
-=======
->>>>>>> Stashed changes
     networkmanager.enable = false;
     interfaces = {
       ether0 = {
@@ -87,13 +84,10 @@
     neovim
     wget
     git
-<<<<<<< Updated upstream
     curl
     bgpq4
     bird3
     pathvector
-=======
->>>>>>> Stashed changes
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -109,11 +103,10 @@
   services.calibre-web.enable = true;
   services.calibre-web.options.enableBookUploading = true;
 
-
   services.bird.enable = true;
   services.bird.checkConfig = false;
   services.bird.config = ''
-include "/var/lib/pathvector/configdir/bird.conf";
+    include "/var/lib/pathvector/configdir/bird.conf";
   '';
 
   systemd.tmpfiles.rules = [
@@ -124,7 +117,7 @@ include "/var/lib/pathvector/configdir/bird.conf";
   # networking.firewall.allowedTCPPorts = [ ... ];
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
-  
+
   # This option defines the first version of NixOS you have installed on this particular machine,
   # and is used to maintain compatibility with application data (e.g. databases) created on older NixOS versions.
   #
