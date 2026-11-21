@@ -7,6 +7,8 @@
     nixpkgs-master.url = "github:NixOS/nixpkgs/master";
     quickshell.url = "github:quickshell-mirror/quickshell";
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
+    disko.url = "github:nix-community/disko";
+    disko.inputs.nixpkgs.follows = "nixpkgs";
     #   sops-nix.url = "github:Mic92/sops-nix";
     #   sops-nix.inputs.nixpkgs.follows = "nixpkgs";
     lanzaboote = {
@@ -23,6 +25,7 @@
       nixpkgs,
       nixpkgs-stable,
       lanzaboote,
+      disko,
       quickshell,
       nixos-hardware,
       ...
@@ -50,6 +53,15 @@
             boot.lanzaboote = {
               enable = true;
               pkiBundle = "/var/lib/sbctl";
+              configurationLimit = 8;
+              measuredBoot = {
+                enable = false;
+                pcrs = [
+                  0
+                  4
+                  7
+                ];
+              };
             };
           })
           #./common/common.nix
@@ -165,6 +177,8 @@
         specialArgs = { inherit inputs; };
         modules = [
           ./vr01/configuration.nix
+          disko.nixosModules.disko
+          ./vr01/disko.nix
           # ./common/common.nix
 
         ];

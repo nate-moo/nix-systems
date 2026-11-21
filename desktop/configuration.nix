@@ -78,8 +78,8 @@
 
   # Additional Kernel Params
   boot.kernelParams = [
-    "amdgpu.ppfeaturemask=0xfff7ffff"
-    #   "resume_offset=48752640"
+    # "amdgpu.ppfeaturemask=0xfff7ffff"
+    # "resume_offset=48752640"
   ];
 
   zramSwap.enable = true;
@@ -1275,7 +1275,12 @@
   fileSystems."/home/nathan" = {
     device = "/dev/disk/by-uuid/675b422f-6ded-4e22-9822-5c9909fc0970";
     fsType = "btrfs";
-    options = [ "defaults" "rw" "subvol=nathan" "compress=zstd" ];
+    options = [
+      "defaults"
+      "rw"
+      "subvol=nathan"
+      "compress=zstd"
+    ];
   };
 
   #fileSystems."/home/nathan/mnt/NixStorage" = {
